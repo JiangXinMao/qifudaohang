@@ -43,7 +43,7 @@
 
 ### 沉浸式首页
 
-![祈福导航系统首页](images/package/qifuyun-home.png)
+
 
 ## 技术栈
 
