@@ -23,8 +23,6 @@
 /admin-ui-source/node_modules/
 /admin-ui-source/dist/
 /admin-ui-source/.auto-import.json
-/admin-ui-source/src/types/import/auto-imports.d.ts
-/admin-ui-source/src/types/import/components.d.ts
 
 # Editors and operating systems
 /.idea/
