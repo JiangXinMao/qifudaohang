@@ -1,0 +1,41 @@
+# Runtime configuration and installation state
+/config.php
+/install/install.lock
+/.qifu-data/
+/includes/sqlite/*.db
+/includes/.telemetry/
+/includes/telemetry_credentials.php
+
+# Backups and generated data
+/backup/
+*.db
+*.sqlite
+*.sqlite3
+*.sql.php
+*.qifubak.php
+
+# Local server output
+/.local/
+/.local-php-*
+*.log
+
+# Frontend dependencies and generated development output
+/admin-ui-source/node_modules/
+/admin-ui-source/dist/
+/admin-ui-source/.auto-import.json
+/admin-ui-source/src/types/import/auto-imports.d.ts
+/admin-ui-source/src/types/import/components.d.ts
+
+# Editors and operating systems
+/.idea/
+/.vscode/
+/admin-ui-source/.vscode/
+.DS_Store
+Thumbs.db
+
+# Packages are published as GitHub Release assets
+*.zip
+*.rar
+*.7z
+*.tar
+*.tgz

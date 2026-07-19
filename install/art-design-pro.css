@@ -1,0 +1,736 @@
+:root {
+  --main-color: #5d87ff;
+  --art-primary-light: #eef3ff;
+  --art-gray-100: #f9fafb;
+  --art-gray-200: #f2f4f5;
+  --art-gray-300: #e6eaeb;
+  --art-gray-400: #dbdfe1;
+  --art-gray-500: #949eb7;
+  --art-gray-600: #7987a1;
+  --art-gray-700: #4d5875;
+  --art-gray-800: #383853;
+  --art-gray-900: #323251;
+  --art-card-border: rgba(0, 0, 0, .08);
+  --default-border: #e2e8ee;
+  --default-bg-color: #fafbfc;
+  --default-box-color: #fff;
+  --art-success: #13ce66;
+  --art-warning: #e6a23c;
+  --art-danger: #f56c6c;
+}
+
+html,
+body.art-install-page {
+  min-height: 100%;
+  background: var(--default-bg-color) !important;
+}
+
+body.art-install-page {
+  min-width: 320px;
+  margin: 0;
+  color: var(--art-gray-800);
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif !important;
+  font-size: 14px;
+}
+
+body.art-install-page .qifu-install-page {
+  width: calc(100% - 40px);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 0 36px;
+}
+
+body.art-install-page .qifu-a-head {
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 20px;
+  color: var(--art-gray-900);
+  border: 1px solid var(--art-card-border);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: var(--default-box-color);
+}
+
+body.art-install-page .qifu-a-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+}
+
+body.art-install-page .qifu-a-brand img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+body.art-install-page .qifu-a-brand strong {
+  display: block;
+  color: var(--art-gray-900);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+body.art-install-page .qifu-a-brand small {
+  display: block;
+  margin-top: 3px;
+  color: var(--art-gray-600);
+  font-size: 11px;
+}
+
+body.art-install-page .qifu-a-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--art-gray-600);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+body.art-install-page .qifu-a-state i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--art-success);
+}
+
+body.art-install-page .qifu-a-state span:first-of-type {
+  padding: 4px 8px;
+  color: #16834f;
+  border-radius: 4px;
+  background: #ecf9f1;
+}
+
+body.art-install-page .qifu-a-grid {
+  display: block;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+}
+
+body.art-install-page .qifu-a-nav {
+  min-width: 0;
+  margin-top: 16px;
+  padding: 22px 24px 18px;
+  overflow: hidden;
+  border: 1px solid var(--art-card-border);
+  border-radius: 10px;
+  background: var(--default-box-color);
+}
+
+body.art-install-page .qifu-a-nav-title {
+  display: block;
+  margin: 0 0 18px;
+  color: var(--art-gray-800);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body.art-install-page .qifu-a-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(132px, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0 4px 3px;
+  overflow-x: auto;
+  list-style: none;
+}
+
+body.art-install-page .qifu-a-step {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0 8px;
+  color: var(--art-gray-600);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: center;
+}
+
+body.art-install-page .qifu-a-step::after {
+  position: absolute;
+  top: 15px;
+  right: calc(-50% + 24px);
+  left: calc(50% + 24px);
+  z-index: -1;
+  height: 1px;
+  content: "";
+  background: var(--art-gray-300);
+}
+
+body.art-install-page .qifu-a-step:last-child::after { display: none; }
+body.art-install-page .qifu-a-step.done::after { background: #9ce0bd; }
+
+body.art-install-page .qifu-a-step-no {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  color: var(--art-gray-600);
+  border: 1px solid var(--art-gray-400);
+  border-radius: 50%;
+  background: var(--default-box-color);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+body.art-install-page .qifu-a-step > span:nth-child(2) {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-width: 0;
+}
+
+body.art-install-page .qifu-a-step strong {
+  display: block;
+  color: var(--art-gray-700);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+body.art-install-page .qifu-a-step small {
+  display: block;
+  margin-top: 2px;
+  color: var(--art-gray-500);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+body.art-install-page .qifu-a-step.active .qifu-a-step-no {
+  color: #fff;
+  border-color: var(--main-color);
+  background: var(--main-color);
+}
+
+body.art-install-page .qifu-a-step.active strong { color: var(--main-color); }
+body.art-install-page .qifu-a-step.done .qifu-a-step-no { color: #fff; border-color: var(--art-success); background: var(--art-success); }
+body.art-install-page .qifu-a-step-check { display: none; }
+
+body.art-install-page .qifu-a-main {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0;
+}
+
+body.art-install-page .qifu-a-main .install-wrap {
+  width: 100%;
+  max-width: none !important;
+  margin: 0;
+  padding: 24px !important;
+  border: 1px solid var(--art-card-border);
+  border-radius: 0 0 10px 10px;
+  background: var(--default-box-color);
+}
+
+body.art-install-page .qifu-a-main .install-wrap > .center-block {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.art-install-page .qifu-a-main .panel,
+body.art-install-page .qifu-a-main .install-card {
+  margin: 0;
+  overflow: visible;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .panel-heading,
+body.art-install-page .qifu-a-main .install-card .panel-heading {
+  padding: 0 0 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--art-gray-300) !important;
+  background: transparent !important;
+}
+
+body.art-install-page .qifu-a-main .panel-title,
+body.art-install-page .qifu-a-main .install-card .panel-title {
+  margin: 0;
+  color: var(--art-gray-900) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-align: left !important;
+}
+
+body.art-install-page .qifu-a-main .panel-title::before { display: none !important; }
+
+body.art-install-page .qifu-a-main .panel-body,
+body.art-install-page .qifu-a-main .install-card .panel-body {
+  padding: 20px 0 0 !important;
+}
+
+body.art-install-page .qifu-a-main .install-hero {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+body.art-install-page .qifu-a-main .install-hero::before { display: none !important; }
+
+body.art-install-page .qifu-a-main .install-title-modern h1 {
+  margin: 0 0 8px;
+  color: var(--art-gray-900) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0;
+}
+
+body.art-install-page .qifu-a-main .version-pill {
+  height: 26px;
+  margin-left: 8px;
+  padding: 0 9px !important;
+  color: var(--main-color) !important;
+  border: 1px solid #cbd9ff;
+  border-radius: 5px !important;
+  background: var(--art-primary-light) !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+  line-height: 24px;
+}
+
+body.art-install-page .qifu-a-main .install-hero p {
+  max-width: 74ch;
+  margin: 0;
+  color: var(--art-gray-600) !important;
+  font-size: 13px !important;
+  line-height: 1.75 !important;
+}
+
+body.art-install-page .qifu-a-main .release-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px !important;
+  margin: 18px 0 0;
+  border: 0;
+}
+
+body.art-install-page .qifu-a-main .release-item {
+  padding: 14px 16px;
+  border: 1px solid var(--art-card-border) !important;
+  border-radius: 8px !important;
+  background: var(--art-gray-100) !important;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .release-item b,
+body.art-install-page .qifu-a-main .feature-item b,
+body.art-install-page .qifu-a-main .install-section h3 {
+  color: var(--art-gray-800) !important;
+  font-weight: 600 !important;
+}
+
+body.art-install-page .qifu-a-main .release-item span,
+body.art-install-page .qifu-a-main .feature-item span,
+body.art-install-page .qifu-a-main .install-list,
+body.art-install-page .qifu-a-main .env-list li {
+  color: var(--art-gray-600) !important;
+}
+
+body.art-install-page .qifu-a-main .install-brand {
+  margin-top: 16px;
+  padding: 12px 14px;
+  color: var(--art-gray-700);
+  border: 1px solid #d9e3ff !important;
+  border-radius: 8px !important;
+  background: #f6f8ff !important;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .install-brand a { color: var(--main-color); }
+
+body.art-install-page .qifu-a-main .feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 !important;
+  margin-top: 18px;
+  border-top: 1px solid var(--art-gray-300);
+}
+
+body.art-install-page .qifu-a-main .feature-item {
+  min-height: 0;
+  padding: 15px 16px;
+  border: 0 !important;
+  border-bottom: 1px solid var(--art-gray-300) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .feature-item:nth-child(odd) { border-right: 1px solid var(--art-gray-300) !important; }
+body.art-install-page .qifu-a-main .feature-item:hover { transform: none !important; }
+
+body.art-install-page .qifu-a-main .install-section { padding: 22px 0 0 !important; }
+body.art-install-page .qifu-a-main .install-section h3 { margin: 0 0 12px; font-size: 14px; }
+
+body.art-install-page .qifu-a-main .env-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px !important;
+}
+
+body.art-install-page .qifu-a-main .env-list li {
+  padding: 10px 12px;
+  border: 1px solid var(--art-card-border) !important;
+  border-radius: 6px !important;
+  background: var(--art-gray-100) !important;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .progress {
+  height: 6px !important;
+  margin: 0 0 20px !important;
+  overflow: hidden;
+  border-radius: 3px !important;
+  background: var(--art-gray-200) !important;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .progress-bar-success { background: var(--main-color) !important; box-shadow: none !important; }
+
+body.art-install-page .qifu-a-main .table {
+  width: 100%;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid var(--art-card-border);
+  border-radius: 8px;
+  background: var(--default-box-color);
+}
+
+body.art-install-page .qifu-a-main .table > thead > tr > th {
+  padding: 13px 16px !important;
+  color: var(--art-gray-600);
+  border: 0 !important;
+  background: var(--art-gray-100) !important;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body.art-install-page .qifu-a-main .table > tbody > tr > td {
+  padding: 14px 16px !important;
+  color: var(--art-gray-700);
+  border-top: 1px solid var(--art-gray-300) !important;
+  background: #fff;
+}
+
+body.art-install-page .qifu-a-main .form-sign { max-width: 680px; margin: 0; }
+body.art-install-page .qifu-a-main .form-sign label { margin: 14px 0 7px; color: var(--art-gray-700); font-size: 12px; font-weight: 500; }
+
+body.art-install-page .qifu-a-main .art-install-db-form {
+  width: 100%;
+  max-width: none;
+}
+
+body.art-install-page .art-install-form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+body.art-install-page .art-install-field {
+  min-width: 0;
+  grid-column: span 6;
+}
+
+body.art-install-page .art-install-field.art-install-host { grid-column: span 8; }
+body.art-install-page .art-install-field.art-install-port { grid-column: span 4; }
+body.art-install-page .art-install-field.art-install-database { grid-column: 1 / -1; }
+
+body.art-install-page .qifu-a-main .art-install-field label {
+  display: block;
+  margin: 0 0 7px;
+  color: var(--art-gray-700);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body.art-install-page .art-install-field small {
+  display: block;
+  min-height: 16px;
+  margin-top: 5px;
+  color: var(--art-gray-500);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+body.art-install-page .art-install-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--art-gray-300);
+}
+
+body.art-install-page .qifu-a-main .art-install-form-actions .btn {
+  width: auto;
+  min-width: 140px;
+}
+
+body.art-install-page .art-install-skip {
+  margin-top: 16px;
+  color: var(--art-gray-600);
+  font-size: 12px;
+}
+
+body.art-install-page .art-install-skip a { color: var(--main-color); }
+
+body.art-install-page .qifu-a-main .form-control {
+  height: 40px;
+  padding: 0 12px;
+  color: var(--art-gray-800);
+  border: 1px solid var(--default-border);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none !important;
+}
+
+body.art-install-page .qifu-a-main .form-control:focus {
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 3px rgba(93, 135, 255, .12) !important;
+}
+
+body.art-install-page .qifu-a-main .btn {
+  min-height: 36px;
+  padding: 8px 16px !important;
+  border: 1px solid var(--default-border) !important;
+  border-radius: 6px !important;
+  background: #fff;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 400 !important;
+}
+
+body.art-install-page .qifu-a-main .btn-primary,
+body.art-install-page .qifu-a-main .start-actions .btn {
+  color: #fff !important;
+  border-color: var(--main-color) !important;
+  background: var(--main-color) !important;
+}
+
+body.art-install-page .qifu-a-main .btn-primary:hover,
+body.art-install-page .qifu-a-main .start-actions .btn:hover { background: #4d76e8 !important; }
+
+body.art-install-page .qifu-a-main .btn-info { color: #1683a1 !important; border-color: #b9e5ef !important; background: #effbfe !important; }
+body.art-install-page .qifu-a-main .btn-warning { color: #a16207 !important; border-color: #f3d58e !important; background: #fff9e9 !important; }
+
+body.art-install-page .qifu-a-main .alert {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding: 11px 14px;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+body.art-install-page .qifu-a-main .alert-success,
+body.art-install-page .qifu-a-main .alert-info { color: #16834f !important; border-color: #bde8cf !important; background: #f0faf4 !important; }
+body.art-install-page .qifu-a-main .alert-warning { color: #a16207 !important; border-color: #f3d58e !important; background: #fff9e9 !important; }
+body.art-install-page .qifu-a-main .alert-danger { color: #c23b3b !important; border-color: #f2c2c2 !important; background: #fff5f5 !important; }
+
+body.art-install-page .qifu-a-main .art-install-completion {
+  color: var(--art-gray-700) !important;
+  border-color: var(--art-card-border) !important;
+  background: var(--default-box-color) !important;
+}
+
+body.art-install-page .qifu-a-main .art-install-completion font[color="green"],
+body.art-install-page .qifu-a-main .art-install-completion font[color=green] {
+  display: block;
+  margin-bottom: 12px;
+  color: #16834f !important;
+  font-weight: 600;
+}
+
+body.art-install-page .qifu-a-main .art-install-completion br { display: none; }
+
+body.art-install-page .qifu-a-main .art-install-completion a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  margin-right: 8px;
+  padding: 0 11px;
+  color: var(--main-color);
+  border: 1px solid #cbd9ff;
+  border-radius: 6px;
+  background: var(--art-primary-light);
+  font-size: 12px;
+}
+
+body.art-install-page .qifu-a-main .art-install-completion a:hover { background: #e4ebff; }
+body.art-install-page .qifu-a-main .art-install-completion hr { margin: 14px 0; border-top: 1px solid var(--art-gray-300); }
+body.art-install-page .qifu-a-main .art-install-completion { line-height: 1.7; }
+body.art-install-page .qifu-a-main .art-install-security { margin-top: 12px !important; }
+body.art-install-page .qifu-a-main .art-install-security code { color: #a16207; background: rgba(255, 255, 255, .72); }
+
+body.art-install-page .qifu-a-main .qifu-admin-path-warning { border: 1px solid #f3d58e !important; background: #fff9e9 !important; }
+body.art-install-page .qifu-a-main .list-group-item {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--art-card-border) !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+}
+
+body.art-install-page .qifu-a-main .list-group-item-info {
+  display: block;
+  min-height: 0;
+  color: #2862d8 !important;
+  border-color: #cbd9ff !important;
+  background: var(--art-primary-light) !important;
+}
+
+body.art-install-page .qifu-a-main .list-group-item form {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+body.art-install-page .qifu-a-main .list-group-item .btn-block,
+body.art-install-page .qifu-a-main .btn-block {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 140px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+}
+
+body.art-install-page .qifu-a-main .install-wrap .panel-body > p[align="right"] {
+  display: flex;
+  justify-content: flex-end;
+  margin: 18px 0 0;
+}
+
+body.art-install-page .qifu-a-main .install-wrap .panel-body > p[align="right"] form { margin: 0; }
+body.art-install-page .qifu-a-main .start-actions { padding: 20px 0 0 !important; text-align: right; }
+body.art-install-page .qifu-a-main .install-wrap .panel > p { margin: 18px 0 0; }
+body.art-install-page .qifu-a-main .install-wrap .panel-body > p { min-height: 0; margin-right: 0; margin-left: 0; }
+body.art-install-page .qifu-a-main .install-wrap .panel-body > p form { display: inline-block; }
+body.art-install-page .qifu-a-main .install-wrap table { max-width: 100%; overflow-wrap: anywhere; }
+
+body.art-install-page .qifu-a-inspector { display: none; }
+
+body.art-install-page .qifu-a-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 0 2px;
+  color: var(--art-gray-500);
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+}
+
+body.art-install-page font[color="green"],
+body.art-install-page font[color=green] { color: #16834f !important; font-weight: 600; }
+body.art-install-page font[color="red"],
+body.art-install-page font[color=red],
+body.art-install-page font[color="#FF0033"] { color: #d94848 !important; font-weight: 600; }
+body.art-install-page font[color="black"],
+body.art-install-page font[color=black] { color: var(--art-gray-600) !important; }
+
+@media (max-width: 900px) {
+  body.art-install-page .qifu-a-steps { grid-template-columns: repeat(6, 138px); }
+  body.art-install-page .qifu-a-main { max-width: none; }
+  body.art-install-page .qifu-a-main .release-strip { grid-template-columns: 1fr; }
+  body.art-install-page .qifu-a-main .feature-grid { grid-template-columns: 1fr; }
+  body.art-install-page .qifu-a-main .feature-item:nth-child(odd) { border-right: 0 !important; }
+}
+
+@media (max-width: 640px) {
+  body.art-install-page .qifu-install-page { width: calc(100% - 30px); padding: 15px 0 26px; }
+  body.art-install-page .qifu-a-head { align-items: flex-start; flex-direction: column; gap: 10px; padding: 14px 16px; }
+  body.art-install-page .qifu-a-state span:last-child { display: none; }
+  body.art-install-page .qifu-a-nav { margin-top: 12px; padding: 18px 14px 14px; }
+  body.art-install-page .qifu-a-nav-title { margin-bottom: 14px; }
+  body.art-install-page .qifu-a-main { margin-top: 0; }
+  body.art-install-page .qifu-a-main .install-wrap { padding: 18px 16px !important; border-radius: 0 0 8px 8px; }
+  body.art-install-page .qifu-a-main .panel-title { font-size: 18px !important; }
+  body.art-install-page .qifu-a-main .install-title-modern h1 { font-size: 21px !important; }
+  body.art-install-page .qifu-a-main .release-strip,
+  body.art-install-page .qifu-a-main .env-list { grid-template-columns: 1fr !important; }
+  body.art-install-page .qifu-a-main .table { display: block; overflow-x: auto; white-space: nowrap; }
+  body.art-install-page .qifu-a-main .start-actions { text-align: stretch; }
+  body.art-install-page .qifu-a-main .start-actions .btn { width: 100%; }
+  body.art-install-page .art-install-field,
+  body.art-install-page .art-install-field.art-install-host,
+  body.art-install-page .art-install-field.art-install-port,
+  body.art-install-page .art-install-field.art-install-database { grid-column: 1 / -1; }
+  body.art-install-page .art-install-form-grid { gap: 15px; }
+  body.art-install-page .art-install-form-actions { margin-top: 18px; }
+  body.art-install-page .qifu-a-main .art-install-form-actions .btn { width: 100%; }
+  body.art-install-page .qifu-a-foot { align-items: flex-start; flex-direction: column; gap: 3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.art-install-page *,
+  body.art-install-page *::before,
+  body.art-install-page *::after { transition-duration: .01ms !important; }
+}
+
+.art-install-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(250, 251, 252, .82);
+  backdrop-filter: blur(2px);
+  animation: art-install-fade-in .16s ease-out both;
+}
+
+.art-install-loading__box {
+  display: flex;
+  min-width: 190px;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px;
+  color: var(--art-gray-700);
+  border: 1px solid var(--art-card-border);
+  border-radius: 8px;
+  background: var(--default-box-color);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
+  font-size: 13px;
+}
+
+.art-install-loading__spinner {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 2px solid #dbe5ff;
+  border-top-color: var(--main-color);
+  border-radius: 50%;
+  animation: art-install-spin .72s linear infinite;
+}
+
+@keyframes art-install-spin { to { transform: rotate(360deg); } }
+@keyframes art-install-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .art-install-loading { animation: none; }
+  .art-install-loading__spinner { animation: none; }
+}

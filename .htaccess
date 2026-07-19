@@ -1,0 +1,18 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?:backup|tests|\.local|includes/(?:sqlite|360safe|\.telemetry))(?:/|$) - [R=404,L,NC]
+RewriteRule ^includes/.*\.php$ - [R=404,L,NC]
+RewriteRule ^(?:config\.php|install/install\.lock)$ - [R=404,L,NC]
+</IfModule>
+
+<FilesMatch "^(?:config\.php|install\.lock)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

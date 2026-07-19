@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    name: PHP 8.2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, fileinfo, openssl, pdo, pdo_mysql, pdo_sqlite, zip
+          coverage: none
+
+      - name: Lint PHP files
+        run: find . -path './admin-ui-source/node_modules' -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run source regression tests
+        run: |
+          php tests/install_flow_test.php
+          php tests/admin_path_test.php
+          php tests/admin_brand_sync_test.php
+          php tests/admin_changelog_test.php
+          php tests/admin_keywords_settings_test.php
+          php tests/admin_system_info_test.php
+          php tests/admin_usage_telemetry_test.php
+          php tests/ad_image_fit_test.php
+
+  admin-ui:
+    name: Admin UI build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-ui-source
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: pnpm
+          cache-dependency-path: admin-ui-source/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build

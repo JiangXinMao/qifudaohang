@@ -1,0 +1,172 @@
+@use 'sass:map';
+
+// === 变量区域 ===
+$transition: (
+  // 页面进入保持轻快，退场更短以减少路由切换时的等待感。
+  enter-duration: 0.22s,
+  leave-duration: 0.08s,
+  // 滑动动画的移动距离
+  distance: 12px,
+  // 自然减速，避免页面在末端突然停住。
+  easing: cubic-bezier(0.25, 1, 0.5, 1),
+  // 淡入淡出专用的缓动函数
+  fade-easing: cubic-bezier(0.25, 1, 0.5, 1)
+);
+
+// 抽取配置值函数，提高可复用性
+@function transition-config($key) {
+  @return map.get($transition, $key);
+}
+
+// 变量简写
+$enter-duration: transition-config('enter-duration');
+$leave-duration: transition-config('leave-duration');
+$distance: transition-config('distance');
+$easing: transition-config('easing');
+$fade-easing: transition-config('fade-easing');
+
+// === 动画类 ===
+
+// 淡入淡出动画
+.fade {
+  &-enter-active {
+    transition: opacity $enter-duration $fade-easing;
+    will-change: opacity;
+  }
+
+  &-leave-active {
+    transition: opacity $leave-duration linear;
+    will-change: opacity;
+  }
+
+  &-enter-from,
+  &-leave-to {
+    opacity: 0;
+  }
+
+  &-enter-to,
+  &-leave-from {
+    opacity: 1;
+  }
+}
+
+// 滑动动画通用样式
+@mixin slide-transition($direction) {
+  $distance-x: 0;
+  $distance-y: 0;
+
+  @if $direction == 'left' {
+    $distance-x: -$distance;
+  } @else if $direction == 'right' {
+    $distance-x: $distance;
+  } @else if $direction == 'top' {
+    $distance-y: -$distance;
+  } @else if $direction == 'bottom' {
+    $distance-y: $distance;
+  }
+
+  &-enter-active {
+    transition:
+      opacity $enter-duration $easing,
+      transform $enter-duration $easing;
+    will-change: opacity, transform;
+    backface-visibility: hidden;
+  }
+
+  &-leave-active {
+    transition: opacity $leave-duration linear;
+    will-change: opacity;
+  }
+
+  &-enter-from {
+    opacity: 0;
+    transform: translate3d($distance-x, $distance-y, 0);
+  }
+
+  &-enter-to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  &-leave-to {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// 滑动动画方向类
+.slide-left {
+  @include slide-transition('left');
+}
+.slide-right {
+  @include slide-transition('right');
+}
+.slide-top {
+  @include slide-transition('top');
+}
+.slide-bottom {
+  @include slide-transition('bottom');
+}
+
+// Use one right-side reveal for all Qifu sidebar destinations.
+.qifu-page-enter {
+  &-enter-active {
+    transition:
+      opacity .22s cubic-bezier(.22, 1, .36, 1),
+      transform .22s cubic-bezier(.22, 1, .36, 1);
+    will-change: opacity, transform;
+  }
+
+  &-leave-active {
+    transition: opacity .1s ease-out;
+    will-change: opacity;
+  }
+
+  &-enter-from {
+    opacity: 0;
+    transform: translate3d(16px, 0, 0);
+  }
+
+  &-enter-to,
+  &-leave-from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  &-leave-to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter-active,
+  .fade-leave-active,
+  .slide-left-enter-active,
+  .slide-left-leave-active,
+  .slide-right-enter-active,
+  .slide-right-leave-active,
+  .slide-top-enter-active,
+  .slide-top-leave-active,
+  .slide-bottom-enter-active,
+  .slide-bottom-leave-active,
+  .qifu-page-enter-enter-active,
+  .qifu-page-enter-leave-active {
+    transition-duration: 0.01ms !important;
+  }
+
+  .slide-left-enter-from,
+  .slide-left-leave-to,
+  .slide-right-enter-from,
+  .slide-right-leave-to,
+  .slide-top-enter-from,
+  .slide-top-leave-to,
+  .slide-bottom-enter-from,
+  .slide-bottom-leave-to {
+    transform: none !important;
+  }
+
+  .qifu-page-enter-enter-from,
+  .qifu-page-enter-leave-to {
+    transform: none !important;
+  }
+}

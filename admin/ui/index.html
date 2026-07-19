@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <title>祈福导航系统</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="祈福导航系统后台管理"
+    />
+    <link rel="shortcut icon" type="image/x-icon" href="./assets/favicon-C1KazUkF.ico" />
+
+    <style>
+      /* 防止页面刷新时白屏的初始样式 */
+      html {
+        background-color: #fafbfc;
+      }
+
+      html.dark {
+        background-color: #070707;
+      }
+    </style>
+
+    <script>
+      // 初始化 html class 主题属性
+      ;(function () {
+        try {
+          if (typeof Storage === 'undefined' || !window.localStorage) {
+            return
+          }
+
+          const themeType = localStorage.getItem('sys-theme')
+          if (themeType === 'dark') {
+            document.documentElement.classList.add('dark')
+          }
+        } catch (e) {
+          console.warn('Failed to apply initial theme:', e)
+        }
+      })()
+    </script>
+    <script type="module" crossorigin src="./assets/index-Dgpty_4N.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B7IOe5nM.css">
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
