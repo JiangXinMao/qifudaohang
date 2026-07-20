@@ -12,9 +12,22 @@
 ![Vue](https://img.shields.io/badge/Vue-3.5-42B883?style=flat-square&logo=vuedotjs&logoColor=white)
 ![Element Plus](https://img.shields.io/badge/Element_Plus-2.11-409EFF?style=flat-square)
 
+![QQ 交流群](https://img.shields.io/badge/QQ%20%E4%BA%A4%E6%B5%81%E7%BE%A4-676129980-12B7F5?style=for-the-badge&logo=tencentqq&logoColor=white)
+
 [快速开始](#快速开始) · [核心能力](#核心能力) · [界面预览](#界面预览) · [运行要求](#运行要求) · [安全部署](#安全部署) · [许可证](#许可证)
 
 </div>
+
+## 官方交流与生产包下载
+
+> [!IMPORTANT]
+> **部署生产环境请下载最新生产包。请勿直接使用 GitHub 自动生成的 Source code 压缩包进行正式部署。**
+>
+> **QQ 交流群：** `676129980`
+>
+> **蓝奏云国内渠道：** [下载最新生产包](https://zyfxb521.lanzouq.com/iXa5w3xgsdti)
+>
+> **GitHub 发布包：** [祈福导航系统 V1.5 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/v1.5.0)
 
 ## 项目定位
 
