@@ -18,6 +18,11 @@
 
 </div>
 
+## 在线演示与推荐
+
+- **在线演示站：** [www.qifuyun.im](https://www.qifuyun.im)
+- **广告推荐：** [匠心猫AI 0.1Pro 稳定中转站](https://api.jiangxinmao.com) - `api.jiangxinmao.com`
+
 ## 官方交流与生产包下载
 
 > [!IMPORTANT]
