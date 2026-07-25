@@ -30,9 +30,9 @@
 >
 > **QQ 交流群：** `676129980`
 >
-> **蓝奏云国内渠道：** [下载最新生产包](https://zyfxb521.lanzouq.com/iXa5w3xgsdti)
+> **蓝奏云国内渠道：** [下载最新生产包](https://zyfxb521.lanzouq.com/ibUfF3yfptsf)
 >
-> **GitHub 发布包：** [祈福导航系统 V1.7 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/v1.7)
+> **GitHub 发布包：** [祈福导航系统 V1.7 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/V1.7)
 
 ## 项目定位
 
