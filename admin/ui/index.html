@@ -38,11 +38,30 @@
         }
       })()
     </script>
-    <script type="module" crossorigin src="./assets/index-Dgpty_4N.js"></script>
+    <script type="module" crossorigin src="./assets/index-hl7koTLS.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-B7IOe5nM.css">
   </head>
 
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div
+        id="qifu-admin-boot"
+        style="max-width: 720px; margin: 18vh auto; padding: 32px 28px; color: #334155; font: 15px/1.8 system-ui, -apple-system, 'Segoe UI', sans-serif; text-align: center"
+      >
+        <strong style="display: block; margin-bottom: 8px; font-size: 20px">后台正在加载</strong>
+        <span>正在准备管理界面，请稍候...</span>
+      </div>
+    </div>
+    <script>
+      window.setTimeout(function () {
+        var app = document.getElementById('app')
+        var boot = document.getElementById('qifu-admin-boot')
+        if (app && boot && app.children.length === 1 && boot.parentNode === app) {
+          boot.innerHTML =
+            '<strong style="display:block;margin-bottom:8px;font-size:20px">后台资源加载失败</strong>' +
+            '<span>请检查 admin/ui/assets 文件是否完整，并确认服务器使用 PHP 8.2 或更高版本。</span>'
+        }
+      }, 10000)
+    </script>
   </body>
 </html>

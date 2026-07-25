@@ -11,7 +11,7 @@ function qifu_update_version_key($version){
 
 function qifu_update_display_version($version){
     $key = qifu_update_version_key($version);
-    return $key !== '' ? 'V'.$key : '';
+    return $key !== '' ? 'V'.preg_replace('/\.0$/', '', $key) : '';
 }
 
 function qifu_update_text($value, $limit = 500){
@@ -82,7 +82,7 @@ function qifu_update_history_cleanup_retired_official(){
 
 function qifu_update_history_seed(){
     $entries = array(
-        array('V1.5.0','2026-07-19','祈福导航 V1.5.0 正式版',array(
+        array('V1.7','2026-07-23','祈福导航 V1.7 正式版',array(
             '全面重构后台管理界面与登录页，统一导航、表格、表单、操作按钮及移动端布局。',
             '重构广告系统，支持全局开关、三个广告区域独立控制和板块内素材管理。',
             '完善站点与分类管理，支持网址信息自动获取、描述跑马灯、彩色图标与自定义图标。',

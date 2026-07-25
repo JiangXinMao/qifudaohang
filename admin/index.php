@@ -39,5 +39,12 @@ $shellHtml = preg_replace_callback(
     1
 );
 
+// index.html is stored under admin/ui but served from /admin/.
+$shellHtml = preg_replace(
+    '#((?:src|href)=["\'])\./assets/#i',
+    '$1./ui/assets/',
+    $shellHtml
+);
+
 header('Content-Type: text/html; charset=UTF-8');
 echo $shellHtml;

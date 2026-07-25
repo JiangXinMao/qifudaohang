@@ -48,7 +48,7 @@ import { staticRoutes } from '../routes/staticRoutes'
 import { loadingService } from '@/utils/ui'
 import { useCommon } from '@/hooks/core/useCommon'
 import { useWorktabStore } from '@/store/modules/worktab'
-import { fetchGetUserInfo } from '@/api/auth'
+import { fetchGetUserInfo, fetchSessionStatus } from '@/api/auth'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
 import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
@@ -68,6 +68,9 @@ let routeInitFailed = false
 
 // 路由初始化进行中标记，防止并发请求
 let routeInitInProgress = false
+
+// The PHP session is authoritative after a legacy login or a full page reload.
+let sessionRestoreAttempted = false
 
 /**
  * 获取 pendingLoading 状态
@@ -151,6 +154,8 @@ async function handleRouteGuard(
     NProgress.start()
   }
 
+  await restoreServerSession(userStore)
+
   // 1. 检查登录状态
   if (!handleLoginStatus(to, userStore, next)) {
     return
@@ -197,6 +202,19 @@ async function handleRouteGuard(
   next({ name: 'Exception404' })
 }
 
+async function restoreServerSession(userStore: ReturnType<typeof useUserStore>): Promise<void> {
+  if (sessionRestoreAttempted || userStore.isLogin) return
+
+  sessionRestoreAttempted = true
+  const session = await fetchSessionStatus()
+  if (!session.authenticated || !session.user) return
+
+  userStore.setToken('session')
+  userStore.setLoginStatus(true)
+  userStore.setUserInfo(session.user)
+  userStore.checkAndClearWorktabs()
+}
+
 /**
  * 处理登录状态
  * @returns true 表示可以继续，false 表示已处理跳转
@@ -206,6 +224,11 @@ function handleLoginStatus(
   userStore: ReturnType<typeof useUserStore>,
   next: NavigationGuardNext
 ): boolean {
+  if (userStore.isLogin && to.path === RoutesAlias.Login) {
+    next({ path: '/', replace: true })
+    return false
+  }
+
   // 已登录或访问登录页或静态路由，直接放行
   if (userStore.isLogin || to.path === RoutesAlias.Login || isStaticRoute(to.path)) {
     return true

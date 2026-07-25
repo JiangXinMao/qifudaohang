@@ -14,6 +14,7 @@ function check_admin_site_meta($condition, $message){
 }
 
 $api_source = file_get_contents($root.'admin/api.php');
+$legacy_source = file_get_contents($root.'ajax_site_meta.php');
 $view_source = file_get_contents($root.'admin-ui-source/src/views/qifu/admin-page.vue');
 $client_source = file_get_contents($root.'admin-ui-source/src/api/qifu.ts');
 
@@ -21,6 +22,13 @@ check_admin_site_meta(strpos($api_source, "if(\$action === 'site_meta')") !== fa
 check_admin_site_meta(strpos($api_source, 'qifu_api_require_write()') !== false, 'admin metadata API does not require login and CSRF');
 check_admin_site_meta(strpos($api_source, "qifu_site_meta_fetch(\$url, \$error)") !== false, 'admin metadata API does not use the secured metadata helper');
 check_admin_site_meta(strpos($api_source, 'qifu_admin_site_meta_requests') !== false, 'admin metadata API is not rate limited');
+$api_meta_start = strpos($api_source, "if(\$action === 'site_meta')");
+$api_close = strpos($api_source, 'session_write_close()', $api_meta_start);
+$api_fetch = strpos($api_source, 'qifu_site_meta_fetch($url, $error)', $api_meta_start);
+check_admin_site_meta($api_close !== false && $api_fetch !== false && $api_close < $api_fetch, 'admin metadata API does not release the session before its remote request');
+$legacy_close = strpos($legacy_source, 'session_write_close()');
+$legacy_fetch = strpos($legacy_source, 'qifu_site_meta_fetch($url, $error)');
+check_admin_site_meta($legacy_close !== false && $legacy_fetch !== false && $legacy_close < $legacy_fetch, 'legacy metadata API does not release the session before its remote request');
 check_admin_site_meta(strpos($client_source, "fetch('./api.php?action=site_meta'") !== false, 'admin client metadata request is missing');
 check_admin_site_meta(strpos($client_source, "'X-CSRF-Token': csrf") !== false, 'admin client metadata request does not send CSRF token');
 check_admin_site_meta(strpos($view_source, '@input="scheduleSiteMeta"') !== false, 'URL input does not schedule automatic metadata fetching');
@@ -39,7 +47,8 @@ check_admin_site_meta(strpos($view_source, 'class="site-row-actions"') !== false
 check_admin_site_meta((bool)preg_match('/<ElIcon>\s*<Edit\s*\/>\s*<\/ElIcon>\s*编辑/u', $view_source), 'site edit action button is missing');
 check_admin_site_meta((bool)preg_match('/<Delete\s*\/>/u', $view_source) && strpos($view_source, 'aria-label="`删除站点 ${scope.row.name}`"') !== false, 'site delete action button is missing');
 check_admin_site_meta(substr_count($view_source, 'class="site-row-actions"') >= 2, 'category rows do not reuse the site action button group');
-check_admin_site_meta(strpos($view_source, 'fixed="right" align="right" header-align="right"') !== false, 'category action column is not aligned to the right');
+check_admin_site_meta(strpos($view_source, 'class="toolbar site-management-toolbar"') !== false, 'site actions are not placed in the filter toolbar');
+check_admin_site_meta(strpos($view_source, 'fixed="right" align="right" header-align="center"') !== false, 'category action heading is not positioned over the edit action');
 
 if($failures){
     fwrite(STDERR, "Admin site metadata tests failed:\n- ".implode("\n- ", $failures)."\n");

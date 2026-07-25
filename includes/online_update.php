@@ -24,7 +24,7 @@ function qifu_online_update_version_key($version){
 
 function qifu_online_update_display_version($version){
     $key = qifu_online_update_version_key($version);
-    return $key === '' ? '' : 'V'.$key;
+    return $key === '' ? '' : 'V'.preg_replace('/\.0$/', '', $key);
 }
 
 function qifu_online_update_remove_tree($path){

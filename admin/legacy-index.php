@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.5 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
 include __DIR__ . "/../includes/common.php";
 require_once SYSTEM_ROOT.'site_stats.php';
 $title='祈福导航系统 - 管理首页';

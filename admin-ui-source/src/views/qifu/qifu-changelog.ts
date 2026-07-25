@@ -8,9 +8,9 @@ export interface QifuChangeLogEntry {
 // 本地正式版作为接口不可用时的回退；远程新版本仍由数据库自动追加并置顶。
 export const qifuChangeLog: QifuChangeLogEntry[] = [
   {
-    version: 'V1.5.0',
-    date: '2026-07-19',
-    title: '祈福导航 V1.5.0 正式版',
+    version: 'V1.7',
+    date: '2026-07-23',
+    title: '祈福导航 V1.7 正式版',
     details: [
       '全面重构后台管理界面与登录页，统一导航、表格、表单、操作按钮及移动端布局。',
       '重构广告系统，支持全局开关、三个广告区域独立控制和板块内素材管理。',

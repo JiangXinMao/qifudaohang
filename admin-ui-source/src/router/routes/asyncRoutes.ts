@@ -152,7 +152,13 @@ export const asyncRoutes: AppRouteRecord[] = [
         component: page,
         meta: { title: '友链管理', icon: 'ri:links-line', keepAlive: true }
       },
-      legacy('legacy-ads', 'LegacyAds', '广告管理', './ad.php', 'ri:advertisement-line')
+      legacy(
+        'legacy-ads',
+        'Ads',
+        '广告管理',
+        './ad.php',
+        'ri:advertisement-line'
+      )
     ]
   },
   {

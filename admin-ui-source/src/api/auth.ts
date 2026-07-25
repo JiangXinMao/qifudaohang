@@ -1,4 +1,4 @@
-import { qifuLogin, qifuUserInfo } from './qifu'
+import { qifuLogin, qifuSessionStatus, qifuUserInfo } from './qifu'
 
 /**
  * 登录
@@ -15,4 +15,8 @@ export function fetchLogin(params: Api.Auth.LoginParams) {
  */
 export function fetchGetUserInfo() {
   return qifuUserInfo()
+}
+
+export function fetchSessionStatus() {
+  return qifuSessionStatus()
 }

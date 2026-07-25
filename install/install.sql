@@ -1,4 +1,4 @@
--- 祈福导航系统 V1.5 官方开源：https://github.com/JiangXinMao/qifudaohang
+-- 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang
 DROP TABLE IF EXISTS `web_config`;
 create table `web_config` (
 `k` varchar(32) NOT NULL,
@@ -7,7 +7,7 @@ PRIMARY KEY  (`k`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `web_config` VALUES ('cache', '');
-INSERT INTO `web_config` VALUES ('version', '1500');
+INSERT INTO `web_config` VALUES ('version', '1700');
 INSERT INTO `web_config` VALUES ('admin_user', 'admin1');
 INSERT INTO `web_config` VALUES ('admin_pwd', '');
 INSERT INTO `web_config` VALUES ('admin_pwd_hash', '$2y$12$yi/MtLCTtY4qgFlhIcQnpuEzkDrJ4DZoBZDJpgChNyuqguqMmDcYu');

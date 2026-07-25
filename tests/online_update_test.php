@@ -69,7 +69,7 @@ try {
         './install/index.php'=>'new-installer',
         './install/install.lock'=>'package-lock',
         './includes/common.php'=>'new-common',
-        './includes/brand.php'=>"<?php define('QIFU_PRODUCT_VERSION', 'V1.5');",
+        './includes/brand.php'=>"<?php define('QIFU_PRODUCT_VERSION', 'V1.7');",
         './includes/online_update.php'=>'updater-v15',
         './includes/sqlite/default.db'=>'package-db',
         './includes/.telemetry/remote.json'=>'package-cache',
@@ -85,8 +85,8 @@ try {
     $progressCallback = static function($phase, $percentage, $message, $status) use (&$progressEvents){
         $progressEvents[] = array($phase, $percentage, $message, $status);
     };
-    $result = qifu_online_update_install_archive($archive, array('version'=>'1.5'), $root, 'secure-admin', $progressCallback);
-    check_online_update(($result['version'] ?? '') === 'V1.5.0', 'installed version was not returned');
+    $result = qifu_online_update_install_archive($archive, array('version'=>'1.7'), $root, 'secure-admin', $progressCallback);
+    check_online_update(($result['version'] ?? '') === 'V1.7', 'installed version was not returned');
     check_online_update(file_get_contents($root.'/index.php') === 'new-index', 'root file was not updated');
     check_online_update(file_get_contents($root.'/secure-admin/index.php') === 'new-admin-index', 'renamed admin directory was not mapped');
     check_online_update(!is_dir($root.'/admin'), 'default admin directory leaked into renamed installation');

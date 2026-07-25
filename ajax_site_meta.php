@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.5 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
 
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -29,6 +29,8 @@ $requests = array_values(array_filter($requests, function($timestamp) use ($now)
 if(count($requests) >= 10) site_meta_json(0, '自动获取过于频繁，请稍后再试');
 $requests[] = $now;
 $_SESSION['qifu_site_meta_requests'] = $requests;
+
+if(session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
 $url = isset($_POST['url']) ? trim((string)$_POST['url']) : '';
 $error = '';

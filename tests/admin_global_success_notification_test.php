@@ -26,7 +26,7 @@ check_success_notification(strpos($layout, '<QifuSuccessToast />') !== false, 'V
 check_success_notification(strpos($component, "event.data.type !== 'qifu-admin-success'") !== false, 'Vue iframe message listener is missing');
 check_success_notification(strpos($component, 'event.origin !== window.location.origin') !== false, 'iframe message origin validation is missing');
 check_success_notification(strpos($component, "path.startsWith('/content/')") !== false, 'content pages do not suppress success notifications');
-check_success_notification(strpos($component, "path === '/outside/iframe/legacy-ads'") !== false, 'legacy ad page does not suppress success notifications');
+check_success_notification(strpos($component, "path === '/outside/iframe/legacy-ads'") === false, 'legacy ad page still suppresses success notifications');
 check_success_notification(strpos($component, 'if (isSilentContentRoute())') !== false, 'success notification route guard is missing');
 check_success_notification(strpos($component, 'data-success-style="G"') !== false, 'global success notification is not using the selected G style');
 check_success_notification(strpos($component, 'transform: translateX(-50%)') !== false, 'G-style success notification is not centered');

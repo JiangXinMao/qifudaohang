@@ -248,8 +248,8 @@ $html_title = $admin_page_label !== '' ? $admin_page_label.' - '.$admin_site_nam
     function promoteSuccessAlerts(root){
       var scope = root && root.querySelectorAll ? root : document;
       var nodes = [];
-      if(scope.matches && scope.matches('.alert.alert-success, .ad-toast.success')) nodes.push(scope);
-      Array.prototype.forEach.call(scope.querySelectorAll('.alert.alert-success, .ad-toast.success'), function(node){ nodes.push(node); });
+      if(scope.matches && scope.matches('.alert.alert-success, .ad-toast.success, .ad-ops-notice.is-success')) nodes.push(scope);
+      Array.prototype.forEach.call(scope.querySelectorAll('.alert.alert-success, .ad-toast.success, .ad-ops-notice.is-success'), function(node){ nodes.push(node); });
       nodes.forEach(function(node){
         if(node.getAttribute('data-qf-success-promoted') === '1') return;
         var text = normalizeSuccessText(node.textContent);
@@ -639,7 +639,7 @@ $html_title = $admin_page_label !== '' ? $admin_page_label.' - '.$admin_site_nam
           body.classList.add('qf-content-enter-active');
           setTimeout(function(){
             body.classList.remove('qf-content-enter-ready', 'qf-content-enter-active');
-          }, 520);
+          }, 240);
         });
         document.title = doc.title || document.title;
         var label = pageLabelFor(url);
@@ -723,6 +723,53 @@ $html_title = $admin_page_label !== '' ? $admin_page_label.' - '.$admin_site_nam
         return true;
       }
 
+      /* 无刷新提交表单：POST 后用返回的 HTML 局部替换内容区（复用 swapAdminContent）。
+         成功返回 true 表示已接管；失败/环境不支持返回 false，调用方回退到原生提交。 */
+      function submitAdminForm(form, submitter, onDone){
+        if(!document.getElementById('qf-content-start')) return false;
+        if(!window.FormData || !window.XMLHttpRequest) return false;
+        var target = document.querySelector('body.qf-admin > .container');
+        if(!target) return false;
+        var url = window.location.href;
+        var data;
+        try { data = new FormData(form); } catch(err){ return false; }
+        /* 带上触发提交的按钮的 name/value（FormData 默认不含 submitter） */
+        if(submitter && submitter.name){ data.append(submitter.name, submitter.value || ''); }
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        showProgress();
+        target.classList.add('qf-content-loading');
+        xhr.onreadystatechange = function(){
+          if(xhr.readyState !== 4) return;
+          if(xhr.status < 200 || xhr.status >= 300){
+            if(onDone) onDone(false);
+            form.submit();
+            return;
+          }
+          try {
+            swapAdminContent(new DOMParser().parseFromString(xhr.responseText || '', 'text/html'), url, false);
+            finishAdminContent();
+            /* 回到内容区顶部，让成功提示可见 */
+            window.scrollTo({ top: 0, behavior: prefersReducedMotionGlobal() ? 'auto' : 'smooth' });
+            if(onDone) onDone(true);
+          } catch(err) {
+            if(onDone) onDone(false);
+            form.submit();
+          }
+        };
+        xhr.onerror = function(){
+          if(onDone) onDone(false);
+          form.submit();
+        };
+        xhr.send(data);
+        return true;
+      }
+      function prefersReducedMotionGlobal(){
+        return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      }
+      window.qifuSubmitAdminForm = submitAdminForm;
+
       document.querySelectorAll('.qf-sidebar a[href], .qf-topbar-actions a[href]').forEach(function(link){
         var linkHref = link.getAttribute('href') || '';
         if(link.classList.contains('qf-menu-link')){
@@ -765,7 +812,7 @@ $html_title = $admin_page_label !== '' ? $admin_page_label.' - '.$admin_site_nam
         }
         showProgress();
         closeMobile();
-        setTimeout(function(){ window.location.href = href; }, 180);
+        setTimeout(function(){ window.location.href = href; }, 50);
       }, true);
       setActiveMenu(window.location.href);
       updateWorktab(window.location.href);
@@ -776,6 +823,77 @@ $html_title = $admin_page_label !== '' ? $admin_page_label.' - '.$admin_site_nam
         syncMobileSidebar(body.classList.contains('qf-sidebar-open'));
         syncSidebarLayout();
       });
+    })();
+
+    /* ─── 全局按钮/表单交互优化 ─── */
+    (function(){
+      /* 1. 表单提交：立即禁用提交按钮并显示加载状态，防止双击重复提交 */
+      document.addEventListener('submit', function(e){
+        var form = e.target;
+        if(!form || form.tagName.toLowerCase() !== 'form') return;
+        /* 自带反馈的表单（如广告页）由其自身脚本处理 loading，这里跳过避免双重 spinner */
+        if(form.hasAttribute('data-feedback-delay')) return;
+        /* 找出本次触发提交的按钮 */
+        var btn = form.querySelector('button[type="submit"].qf-submitting') ||
+                  form.querySelector('button[type="submit"]:not([data-no-loading])');
+        if(!btn) return;
+        if(btn.disabled || btn.classList.contains('is-loading')) return;
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+        var originalHtml = btn.innerHTML;
+        btn.setAttribute('data-original-html', originalHtml);
+        /* 替换为加载文字 + 旋转图标 */
+        var hasGlyph = btn.querySelector('.glyphicon');
+        if(hasGlyph){
+          btn.innerHTML = '<span class="glyphicon glyphicon-refresh qf-btn-spin" aria-hidden="true"></span>' +
+                          '<span>' + (btn.textContent.trim() || '处理中…') + '</span>';
+        } else {
+          btn.textContent = '处理中…';
+        }
+        /* 兜底：若5s后表单仍未完成（如网络异常）则恢复按钮 */
+        setTimeout(function(){
+          if(btn.classList.contains('is-loading')){
+            btn.disabled = false;
+            btn.classList.remove('is-loading');
+            var orig = btn.getAttribute('data-original-html');
+            if(orig) btn.innerHTML = orig;
+          }
+        }, 5000);
+      }, true);
+
+      /* 2. 普通链接/按钮：点击后立即给予视觉反馈（active涟漪），消除点击迟疑感 */
+      document.addEventListener('mousedown', function(e){
+        var target = e.target;
+        while(target && target !== document){
+          if(target.tagName && (target.tagName === 'BUTTON' || target.tagName === 'A')){
+            if(!target.classList.contains('qf-ripple-host')){
+              target.classList.add('qf-ripple-host');
+            }
+            /* 创建涟漪点 */
+            var rect = target.getBoundingClientRect();
+            var ripple = document.createElement('span');
+            ripple.className = 'qf-ripple';
+            var size = Math.max(rect.width, rect.height);
+            ripple.style.cssText = 'width:' + size + 'px;height:' + size + 'px;' +
+              'left:' + (e.clientX - rect.left - size / 2) + 'px;' +
+              'top:' + (e.clientY - rect.top - size / 2) + 'px;';
+            target.appendChild(ripple);
+            setTimeout(function(){ if(ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 480);
+            break;
+          }
+          target = target.parentNode;
+        }
+      }, true);
+
+      /* 3. 刷新按钮加速：去除刷新自带的旋转延迟 */
+      var adminRefresh = document.getElementById('adminRefresh');
+      if(adminRefresh){
+        adminRefresh.addEventListener('mousedown', function(){
+          this.classList.add('qf-press');
+          var self = this;
+          setTimeout(function(){ self.classList.remove('qf-press'); }, 200);
+        });
+      }
     })();
   </script>
   <span id="qf-content-start" hidden></span>

@@ -340,6 +340,13 @@ if($input) $_POST = array_merge($_POST, $input);
 
 if($action === 'csrf') qifu_api_exit(array('csrf'=>qifu_csrf_token()));
 if($action === 'brand') qifu_api_exit(qifu_api_brand());
+if($action === 'session_status'){
+    $authenticated = isset($islogin) && intval($islogin) === 1;
+    qifu_api_exit(array(
+        'authenticated'=>$authenticated,
+        'user'=>$authenticated ? qifu_api_user() : null
+    ));
+}
 
 if($action === 'login'){
     if($_SERVER['REQUEST_METHOD'] !== 'POST') qifu_api_exit(array(), '请求方式错误', 405);
@@ -507,6 +514,8 @@ if($action === 'site_meta'){
     $requests[] = $now;
     $_SESSION['qifu_admin_site_meta_requests'] = $requests;
 
+    if(session_status() === PHP_SESSION_ACTIVE) session_write_close();
+
     $url = isset($_POST['url']) ? trim((string)$_POST['url']) : '';
     $error = '';
     $meta = qifu_site_meta_fetch($url, $error);
@@ -564,9 +573,29 @@ if($action === 'site_save'){
 
 if($action === 'site_delete'){
     qifu_api_require_write();
-    $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? $_POST['ids'] : array(intval(@$_POST['id']));
-    foreach($ids as $id){ $id=intval($id); if($id>0) $DB->prepared_query('DELETE FROM web_dh WHERE id=?',array($id)); }
-    $CACHE->clear(); writeLog('删除','站点',0,'Art Design Pro 后台删除站点'); qifu_api_exit(array(),'站点已删除');
+    $raw_ids = isset($_POST['ids']) && is_array($_POST['ids']) ? $_POST['ids'] : array(@$_POST['id']);
+    $ids = array();
+    foreach($raw_ids as $raw_id){
+        $id = intval($raw_id);
+        if($id > 0) $ids[$id] = $id;
+    }
+    $ids = array_values($ids);
+    if(!$ids) qifu_api_exit(array(), '请选择至少一个有效站点', 400);
+
+    $deleted = 0;
+    foreach($ids as $id){
+        if(!$DB->prepared_row('SELECT id FROM web_dh WHERE id=?', array($id))) continue;
+        $DB->prepared_query('DELETE FROM web_dh WHERE id=?', array($id));
+        $deleted++;
+    }
+    if($deleted === 0) qifu_api_exit(array('requested'=>count($ids), 'deleted'=>0), '所选站点不存在或已被删除', 404);
+
+    $CACHE->clear();
+    writeLog('删除', '站点', 0, 'Art Design Pro 后台删除站点: '.$deleted.' 个');
+    qifu_api_exit(
+        array('requested'=>count($ids), 'deleted'=>$deleted),
+        $deleted > 1 ? '站点已批量删除' : '站点已删除'
+    );
 }
 
 if($action === 'category_save'){
@@ -584,7 +613,30 @@ if($action === 'category_save'){
 }
 
 if($action === 'category_delete'){
-    qifu_api_require_write(); $id=intval(@$_POST['id']); if($id<=0) qifu_api_exit(array(),'分类编号无效',400); $DB->prepared_query('DELETE FROM web_category WHERE id=?',array($id)); $CACHE->clear(); writeLog('删除','分类',$id,'Art Design Pro 后台删除分类'); qifu_api_exit(array(),'分类已删除');
+    qifu_api_require_write();
+    $raw_ids = isset($_POST['ids']) && is_array($_POST['ids']) ? $_POST['ids'] : array(@$_POST['id']);
+    $ids = array();
+    foreach($raw_ids as $raw_id){
+        $id = intval($raw_id);
+        if($id > 0) $ids[$id] = $id;
+    }
+    $ids = array_values($ids);
+    if(!$ids) qifu_api_exit(array(), '请选择至少一个有效分类', 400);
+
+    $deleted = 0;
+    foreach($ids as $id){
+        if(!$DB->prepared_row('SELECT id FROM web_category WHERE id=?', array($id))) continue;
+        $DB->prepared_query('DELETE FROM web_category WHERE id=?', array($id));
+        $deleted++;
+    }
+    if($deleted === 0) qifu_api_exit(array('requested'=>count($ids), 'deleted'=>0), '所选分类不存在或已被删除', 404);
+
+    $CACHE->clear();
+    writeLog('删除', '分类', 0, 'Art Design Pro 后台删除分类: '.$deleted.' 个');
+    qifu_api_exit(
+        array('requested'=>count($ids), 'deleted'=>$deleted),
+        $deleted > 1 ? '分类已批量删除' : '分类已删除'
+    );
 }
 
 if($action === 'link_toggle'){

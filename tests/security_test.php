@@ -13,6 +13,7 @@ require ROOT.'config.php';
 require SYSTEM_ROOT.'db.class.php';
 require SYSTEM_ROOT.'function.php';
 require SYSTEM_ROOT.'security.php';
+require SYSTEM_ROOT.'ad_helper.php';
 
 if(session_status() !== PHP_SESSION_ACTIVE) session_start();
 $DB = new DB($dbconfig['host'], $dbconfig['user'], $dbconfig['pwd'], $dbconfig['dbname'], $dbconfig['port']);
@@ -43,6 +44,8 @@ check_security(
 $login_source = file_get_contents(ROOT.'admin/login.php');
 $password_source = file_get_contents(ROOT.'admin/password.php');
 $ad_source = file_get_contents(ROOT.'admin/ad.php');
+$ad_helper_source = file_get_contents(ROOT.'includes/ad_helper.php');
+$front_source = file_get_contents(ROOT.'index.php');
 $upload_source = file_get_contents(ROOT.'admin/ajax_upload_ad.php');
 $mail_test_source = file_get_contents(ROOT.'admin/ajax_test_mail.php');
 $legacy_source = file_get_contents(ROOT.'admin/legacy-index.php');
@@ -97,6 +100,15 @@ $private_ip = null;
 check_security(!qifu_public_http_url('http://127.0.0.1/admin', $private_ip), 'loopback URL must be rejected');
 check_security(!qifu_public_http_url('http://localhost/', $private_ip), 'localhost URL must be rejected');
 check_security(!qifu_public_http_url('file:///etc/passwd', $private_ip), 'non-HTTP URL must be rejected');
+check_security(qifu_ad_normalize_url('example.com/path') === 'https://example.com/path', 'bare advertisement domain is not normalized to HTTPS');
+check_security(qifu_ad_normalize_url('/inside/page') === '/inside/page', 'safe site-relative advertisement link was rejected');
+check_security(qifu_ad_normalize_url('mailto:service@example.com') === 'mailto:service@example.com', 'safe mailto advertisement link was rejected');
+check_security(qifu_ad_normalize_url('javascript:alert(1)') === '', 'javascript advertisement link was accepted');
+check_security(qifu_ad_normalize_url('data:text/html,alert(1)') === '', 'data advertisement link was accepted');
+check_security(strpos($ad_helper_source, "'link' => qifu_ad_normalize_url") !== false, 'legacy advertisement links are not normalized during migration');
+check_security(strpos($ad_helper_source, "\$row['link'] = qifu_ad_normalize_url") !== false, 'stored advertisement links are not normalized before rendering');
+check_security(strpos($front_source, "'link' => qifu_ad_normalize_url") !== false, 'legacy side advertisement links are not normalized before rendering');
+check_security(strpos($front_source, "'javascript:void(0)'") === false, 'frontend advertisement fallback still renders a javascript URL');
 
 $table_count = intval($DB->prepared_value("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='web_dh'"));
 check_security($table_count === 1, 'web_dh table is missing before injection test');

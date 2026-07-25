@@ -1,5 +1,5 @@
 /*
- * Qifu V1.5 legacy detail pages — Art Design Pro content-page adapter.
+ * Qifu V1.7 legacy detail pages — Art Design Pro content-page adapter.
  * Presentation only: form fields, names, actions and PHP business logic stay unchanged.
  */
 
@@ -2252,4 +2252,87 @@ body.qf-page-ad.qf-art-embedded .ad-inline-add-slot {
     scroll-behavior: auto !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* ═══════════════════════════════════════════════
+   全局交互优化：按钮加载状态 & 点击涟漪效果
+   ═══════════════════════════════════════════════ */
+
+/* 按钮点击即时视觉反馈 —— 所有 btn 加速过渡 */
+.btn {
+  transition: background-color .12s ease, border-color .12s ease,
+              color .12s ease, box-shadow .12s ease, opacity .12s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 加载中状态 */
+.btn.is-loading {
+  cursor: not-allowed !important;
+  opacity: .75 !important;
+  pointer-events: none;
+}
+
+/* 旋转动画：用于加载中的图标 */
+@keyframes qfBtnSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.qf-btn-spin {
+  display: inline-block;
+  animation: qfBtnSpin .6s linear infinite;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* 点击涟漪效果 */
+.qf-ripple-host {
+  position: relative;
+  overflow: hidden;
+}
+
+.qf-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .28);
+  transform: scale(0);
+  animation: qfRippleAnim .45s cubic-bezier(.25, .46, .45, .94) forwards;
+  pointer-events: none;
+  z-index: 9;
+}
+
+@keyframes qfRippleAnim {
+  to { transform: scale(2.5); opacity: 0; }
+}
+
+/* 深色按钮涟漪用白色，浅色按钮涟漪用主色 */
+.btn-default .qf-ripple,
+.btn-link .qf-ripple {
+  background: rgba(var(--qf-art-primary-rgb, 24, 144, 255), .18);
+}
+
+/* 按钮 press 状态（mousedown 瞬间下压感） */
+.btn:active:not(.is-loading),
+.btn.qf-press {
+  transform: translateY(1px) scale(.985) !important;
+  box-shadow: none !important;
+}
+
+/* 刷新按钮快速反馈 */
+.qf-press {
+  transition: transform .08s ease !important;
+}
+
+/* ─── 表单提交时光标提示 ─── */
+form.qf-form-submitting {
+  pointer-events: none;
+  cursor: wait;
+}
+
+/* ─── 减少动效模式兼容 ─── */
+@media (prefers-reduced-motion: reduce) {
+  .qf-ripple,
+  .qf-btn-spin { animation: none !important; }
+  .btn { transition: none !important; }
 }

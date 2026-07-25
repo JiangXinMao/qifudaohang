@@ -39,7 +39,7 @@
   const isSilentContentRoute = () => {
     const path = window.location.hash.replace(/^#/, '').split('?')[0].replace(/\/+$/, '') || '/'
     return (
-      path === '/content' || path.startsWith('/content/') || path === '/outside/iframe/legacy-ads'
+      path === '/content' || path.startsWith('/content/')
     )
   }
 

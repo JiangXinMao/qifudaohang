@@ -2,7 +2,7 @@
 
 ## Supported Version
 
-当前接受安全修复的版本为 V1.5 最新发布版本。
+当前接受安全修复的版本为 V1.7 最新发布版本。
 
 ## Reporting a Vulnerability
 

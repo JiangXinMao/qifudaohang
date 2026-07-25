@@ -207,6 +207,15 @@ export function qifuUserInfo() {
   return request.get<Api.Auth.UserInfo>({ url: './api.php?action=user_info' })
 }
 
+export interface QifuSessionStatus {
+  authenticated: boolean
+  user: Api.Auth.UserInfo | null
+}
+
+export function qifuSessionStatus() {
+  return request.get<QifuSessionStatus>({ url: './api.php?action=session_status' })
+}
+
 export function qifuProfile() {
   return request.get<QifuProfile>({ url: './api.php?action=profile' })
 }

@@ -4324,7 +4324,7 @@ body.qf-admin .qf-sidebar .qf-menu-link.active .glyphicon {
   color: #16a34a !important;
 }
 
-/* V1.5 final layout polish: full-width PC pages, even controls, clean brand. */
+/* V1.7 final layout polish: full-width PC pages, even controls, clean brand. */
 body.qf-admin > .container,
 body.qf-admin > .container[style*="padding-top:70px"],
 body.qf-admin .container[style*="padding-top:70px"] {
@@ -5844,7 +5844,7 @@ body.qf-auth .qf-login-aside h1 {
   }
 }
 
-/* V1.5 admin panel heading: cold blue line style */
+/* V1.7 admin panel heading: cold blue line style */
 body.qf-admin .panel > .panel-heading {
   position: relative !important;
   isolation: isolate;

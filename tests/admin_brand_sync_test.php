@@ -39,7 +39,7 @@ check_brand_sync(strpos($builtShell, '<title>Art Design Pro</title>') === false,
 $entryScript = '';
 if(preg_match('#<script[^>]+src="([^"]+\.js)"#i', $builtShell, $entryMatch)) $entryScript = basename($entryMatch[1]);
 check_brand_sync($entryScript !== '', 'the built admin shell is missing its module entry script');
-check_brand_sync($entryScript !== '' && is_file($root.'admin/assets/'.$entryScript), 'the built admin shell points to a missing module entry script');
+check_brand_sync($entryScript !== '' && is_file($root.'admin/ui/assets/'.$entryScript), 'the built admin shell points to a missing module entry script');
 
 if($failures){
     fwrite(STDERR, "Admin brand sync tests failed:\n- ".implode("\n- ", $failures)."\n");

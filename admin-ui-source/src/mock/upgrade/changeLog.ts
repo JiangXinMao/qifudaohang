@@ -9,9 +9,9 @@ interface UpgradeLog {
 
 export const upgradeLogList = ref<UpgradeLog[]>([
   {
-    version: 'v1.5.0',
-    title: '祈福导航 V1.5.0 正式版',
-    date: '2026-07-19',
+    version: 'v1.7',
+    title: '祈福导航 V1.7 正式版',
+    date: '2026-07-23',
     detail: [
       '重构后台管理界面、登录页与移动端布局',
       '完善广告、站点、分类与友情链接管理',

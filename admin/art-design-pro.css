@@ -1637,3 +1637,51 @@ body.qf-art-pro .art-modal-close:hover { color: #ff4949 !important; background: 
   body.qf-art-pro .art-toolbar-form { width: 100% !important; }
   body.qf-art-pro .art-toolbar-form .form-control { width: 100% !important; }
 }
+
+/* ═══════════════════════════════════════════════
+   Art Design Pro 交互加速优化
+   ═══════════════════════════════════════════════ */
+
+/* Element Plus 风格按钮加速过渡 */
+body.qf-art-pro .el-button,
+body.qf-art-pro .art-btn,
+body.qf-art-pro button {
+  transition: background-color .12s ease, border-color .12s ease,
+              color .12s ease, box-shadow .12s ease, opacity .12s ease,
+              transform .12s ease !important;
+}
+
+/* 按钮点击下压反馈 */
+body.qf-art-pro .el-button:active:not(.is-loading):not(.is-disabled),
+body.qf-art-pro .art-btn:active:not(.is-loading):not(.is-disabled),
+body.qf-art-pro button:active:not(:disabled):not(.is-loading) {
+  transform: translateY(1px) scale(.985) !important;
+}
+
+/* 卡片悬停效果加速 */
+body.qf-art-pro .art-card,
+body.qf-art-pro .art-stat-card,
+body.qf-art-pro .art-link-card {
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease !important;
+}
+
+/* 表单控件聚焦加速 */
+body.qf-art-pro input,
+body.qf-art-pro select,
+body.qf-art-pro textarea,
+body.qf-art-pro .form-control {
+  transition: border-color .12s ease, box-shadow .12s ease !important;
+}
+
+/* Modal 动画加速 */
+body.qf-art-pro .modal.fade .modal-dialog {
+  transition: transform .18s ease-out, opacity .18s ease-out !important;
+}
+
+/* 减少动效模式兼容 */
+@media (prefers-reduced-motion: reduce) {
+  body.qf-art-pro * {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

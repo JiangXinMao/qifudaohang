@@ -45,8 +45,8 @@ check_admin_changelog(strpos($history, "web_update_history") !== false, 'local u
 check_admin_changelog(strpos($history, "qifu_update_history_sync_remote") !== false, 'verified remote update archiving is missing');
 check_admin_changelog(strpos($history, "WHERE version_key=?") !== false, 'version history is not deduplicated');
 check_admin_changelog(strpos($history, "qifu_update_history_cleanup_retired_official") !== false && strpos($history, "array('1.6.0', '祈福导航 V1.6.0 正式版')") !== false, 'retired bundled V1.6.0 changelog cleanup is missing');
-check_admin_changelog(strpos($brand, "QIFU_PRODUCT_VERSION', 'V1.5.0'") !== false, 'installed product version is not current');
-check_admin_changelog(strpos($data, "version: 'V1.5.0'") !== false, 'bundled changelog is not aligned with the installed version');
+check_admin_changelog(strpos($brand, "QIFU_PRODUCT_VERSION', 'V1.7'") !== false, 'installed product version is not current');
+check_admin_changelog(strpos($data, "version: 'V1.7'") !== false, 'bundled changelog is not aligned with the installed version');
 
 if($failures){
     fwrite(STDERR, "Admin changelog tests failed:\n- ".implode("\n- ", $failures)."\n");

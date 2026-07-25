@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/JiangXinMao/qifudaohang/actions/workflows/ci.yml/badge.svg)](https://github.com/JiangXinMao/qifudaohang/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-16803A?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/Version-1.5.0-2563EB?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.7-2563EB?style=flat-square)
 ![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL%20%2F%20MariaDB-Supported-4479A1?style=flat-square&logo=mysql&logoColor=white)
 ![Vue](https://img.shields.io/badge/Vue-3.5-42B883?style=flat-square&logo=vuedotjs&logoColor=white)
@@ -27,13 +27,37 @@
 >
 > **蓝奏云国内渠道：** [下载最新生产包](https://zyfxb521.lanzouq.com/iXa5w3xgsdti)
 >
-> **GitHub 发布包：** [祈福导航系统 V1.5 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/v1.5.0)
+> **GitHub 发布包：** [祈福导航系统 V1.7 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/v1.7)
 
 ## 项目定位
 
 祈福导航系统面向个人主页、团队资源导航和公开网址目录。系统提供响应式沉浸式前台、站点与分类运营、友链审核、广告位管理、在线统计、备份与维护等能力，并配套基于 Vue 3 与 Art Design Pro 深度定制的管理后台。
 
 正式部署不依赖 Composer，也不要求服务器安装 Node.js。仓库已经包含编译后的后台静态资源，上传 PHP 程序并完成安装向导即可运行；只有二次开发后台界面时才需要 Node.js 与 pnpm。
+
+## V1.7 更新亮点
+
+- **三端响应式体验**：前台与后台同时适配桌面、平板和手机，搜索、表格、表单和操作区会按屏幕宽度自动调整。
+- **全新现代化后台**：基于 Vue 3、Element Plus 与 Art Design Pro 深度定制，统一导航、表格、表单、通知和页面切换体验。
+- **站点与分类运营**：支持站点和分类的新增、编辑、排序、启停、批量操作、图标设置与网站信息自动获取。
+- **本站资源搜索**：可按名称、描述、分类、域名和链接实时筛选，并保留百度、Google、Bing 等外部搜索入口。
+- **完整广告管理**：支持搜索栏下方四个固定槽位以及 PC 左右悬浮广告位，可配置素材、链接、时间、排序、权重和开关。
+- **广告效果统计**：记录广告展示量与点击量，后台可查看各广告素材的实际投放数据。
+- **友链申请与审核**：前台提供友链申请，后台支持审核、拒绝和通过后直接加入导航。
+- **访问与状态统计**：支持匿名访问统计、演示数据规则、站点可用性、HTTP 状态码和响应延迟检测。
+- **备份与恢复**：提供数据库备份、恢复记录和操作反馈，升级前后可以更稳妥地保护业务数据。
+- **安全在线更新**：更新清单与安装包执行 Ed25519 签名、SHA-256、文件大小和版本校验，并支持维护状态、备份和失败回滚。
+- **安装流程加固**：完善环境检测、数据库连接、配置生成、安装完成页和异常提示，降低宝塔环境中出现空白页的概率。
+- **安全能力升级**：包含参数化查询、CSRF、防登录爆破、安全 Cookie、上传校验、SSRF 防护和后台目录改名支持。
+
+### V1.7 版本标识
+
+| 项目 | 值 |
+| --- | --- |
+| 产品版本 | `V1.7` |
+| 内部版本 | `1700` |
+| 后台前端版本 | `1.7.0` |
+| 更新协议版本 | `1.7.0` |
 
 ## 核心能力
 
@@ -92,6 +116,13 @@ git clone https://github.com/JiangXinMao/qifudaohang.git
 5. 立即修改默认管理员密码，并将 `admin` 目录改为不易猜测的名称。
 
 全新安装的默认账号与密码为 `admin1 / 123456`，仅用于完成首次登录，禁止继续用于生产环境。
+
+### 从旧版本升级
+
+1. 升级前同时备份数据库和完整程序目录。
+2. 优先使用后台在线更新；手工覆盖时不得覆盖现有 `config.php` 和 `install/install.lock`。
+3. 更新完成后清理浏览器缓存并重新登录后台，确认站点、分类、广告和系统设置完整。
+4. 检查 PHP 的 cURL、OpenSSL、Sodium、Zip 和 fileinfo 扩展，确保在线更新与上传功能可用。
 
 ### 本地评估
 

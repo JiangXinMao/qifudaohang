@@ -31,103 +31,160 @@ function qifu_ad_slot_label($slot){
 
 function qifu_ad_image_box($position){
     return $position === 'pc_left' || $position === 'pc_right'
-        ? array('width'=>600, 'height'=>800)
-        : array('width'=>1440, 'height'=>480);
+        ? array('width'=>560, 'height'=>1240)
+        : array('width'=>840, 'height'=>240);
 }
 
-function qifu_ad_fit_dimensions($width, $height, $position){
+/**
+ * Return the exact target canvas and the centered cover scaling plan for an ad.
+ *
+ * Static uploads are normalized to this canvas so the stored file and the
+ * frontend component always share the same aspect ratio.
+ */
+function qifu_ad_cover_dimensions($width, $height, $position){
     $width = max(1, intval($width));
     $height = max(1, intval($height));
     $box = qifu_ad_image_box($position);
-    $scale = min(1, $box['width'] / $width, $box['height'] / $height);
+    $width_scale = $box['width'] / $width;
+    $height_scale = $box['height'] / $height;
+    if($width_scale >= $height_scale){
+        $scaled_width = $box['width'];
+        $scaled_height = max($box['height'], intval(ceil(($height * $width_scale) - 0.0000001)));
+    } else {
+        $scaled_width = max($box['width'], intval(ceil(($width * $height_scale) - 0.0000001)));
+        $scaled_height = $box['height'];
+    }
+
     return array(
-        'width'=>max(1, intval(round($width * $scale))),
-        'height'=>max(1, intval(round($height * $scale))),
-        'resized'=>$scale < 1
+        'width'=>$box['width'],
+        'height'=>$box['height'],
+        'scaled_width'=>$scaled_width,
+        'scaled_height'=>$scaled_height,
+        'offset_x'=>intval(floor(($box['width'] - $scaled_width) / 2)),
+        'offset_y'=>intval(floor(($box['height'] - $scaled_height) / 2)),
+        'resized'=>$width !== $box['width'] || $height !== $box['height'],
+        'cropped'=>$scaled_width !== $box['width'] || $scaled_height !== $box['height']
     );
+}
+
+/**
+ * Kept as a compatibility alias for callers that previously used the fit API.
+ * The return value now deliberately describes a cover crop rather than contain.
+ */
+function qifu_ad_fit_dimensions($width, $height, $position){
+    return qifu_ad_cover_dimensions($width, $height, $position);
 }
 
 function qifu_ad_resize_saved_image($path, $position, &$info){
     $info = array('resized'=>false, 'message'=>'');
     $image = @getimagesize($path);
     if(!$image || empty($image[0]) || empty($image[1])){
-        $info['message'] = '图片已上传，前台会自动等比适配';
-        return true;
+        $info['message'] = '广告图片读取失败，未保存该文件';
+        return false;
     }
+
     $mime = isset($image['mime']) ? strtolower((string)$image['mime']) : '';
-    $fit = qifu_ad_fit_dimensions($image[0], $image[1], $position);
+    $cover = qifu_ad_cover_dimensions($image[0], $image[1], $position);
     $info = array(
         'original_width'=>intval($image[0]),
         'original_height'=>intval($image[1]),
-        'width'=>$fit['width'],
-        'height'=>$fit['height'],
+        'width'=>$cover['width'],
+        'height'=>$cover['height'],
         'resized'=>false,
         'message'=>''
     );
-    if(!$fit['resized']){
-        $info['message'] = '上传成功，图片尺寸 '.$image[0].'×'.$image[1].'，无需缩小';
-        return true;
-    }
+
+    // GIF is intentionally left untouched so animated frames are not flattened.
     if($mime === 'image/gif'){
         $info['width'] = intval($image[0]);
         $info['height'] = intval($image[1]);
-        $info['message'] = '上传成功，GIF 动画保持原图，前台会完整等比适配';
+        $info['message'] = '上传成功，GIF 动画保持原图；前台会居中裁切并铺满广告位。';
         return true;
     }
+
+    // An already-normalized static image does not need a lossy rewrite or GD.
+    if(!$cover['resized']){
+        $info['message'] = '上传成功，图片已符合 '.$cover['width'].'×'.$cover['height'].' 广告位尺寸。';
+        return true;
+    }
+
     $loaders = array(
         'image/jpeg'=>'imagecreatefromjpeg',
         'image/png'=>'imagecreatefrompng',
         'image/webp'=>'imagecreatefromwebp'
     );
-    if(!isset($loaders[$mime]) || !function_exists($loaders[$mime]) || !function_exists('imagecreatetruecolor')){
+    $writers = array(
+        'image/jpeg'=>'imagejpeg',
+        'image/png'=>'imagepng',
+        'image/webp'=>'imagewebp'
+    );
+    if(!isset($loaders[$mime])){
+        $info['message'] = '广告图片格式不受支持，未保存该文件。';
+        return false;
+    }
+    if(!function_exists($loaders[$mime]) || !function_exists($writers[$mime]) || !function_exists('imagecreatetruecolor')){
         $info['width'] = intval($image[0]);
         $info['height'] = intval($image[1]);
-        $info['message'] = '上传成功，服务器未启用 GD，前台会完整等比适配原图';
+        $info['message'] = '上传成功，服务器未启用 GD 裁切扩展，已保留原图；前台会居中裁切并铺满广告位。';
         return true;
     }
+
     $source = @$loaders[$mime]($path);
-    $canvas = @imagecreatetruecolor($fit['width'], $fit['height']);
+    $canvas = @imagecreatetruecolor($cover['width'], $cover['height']);
     if(!$source || !$canvas){
         if($source) imagedestroy($source);
         if($canvas) imagedestroy($canvas);
-        $info['width'] = intval($image[0]);
-        $info['height'] = intval($image[1]);
-        $info['message'] = '上传成功，图片缩放不可用，前台会完整等比适配原图';
-        return true;
+        $info['message'] = '广告图片裁切失败，未保存该文件。';
+        return false;
     }
+
     if($mime === 'image/png' || $mime === 'image/webp'){
         imagealphablending($canvas, false);
         imagesavealpha($canvas, true);
         $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
-        imagefilledrectangle($canvas, 0, 0, $fit['width'], $fit['height'], $transparent);
+        imagefilledrectangle($canvas, 0, 0, $cover['width'], $cover['height'], $transparent);
     }
-    $copied = imagecopyresampled($canvas, $source, 0, 0, 0, 0, $fit['width'], $fit['height'], intval($image[0]), intval($image[1]));
-    $temporary = $path.'.resize';
+
+    $copied = @imagecopyresampled(
+        $canvas,
+        $source,
+        $cover['offset_x'],
+        $cover['offset_y'],
+        0,
+        0,
+        $cover['scaled_width'],
+        $cover['scaled_height'],
+        intval($image[0]),
+        intval($image[1])
+    );
+    $temporary = @tempnam(dirname($path), 'qifu-ad-');
+    if($temporary !== false) @unlink($temporary);
     $saved = false;
-    if($copied){
+    if($copied && $temporary !== false){
         if($mime === 'image/jpeg'){
             imageinterlace($canvas, true);
-            $saved = imagejpeg($canvas, $temporary, 88);
+            $saved = @imagejpeg($canvas, $temporary, 88);
         } elseif($mime === 'image/png'){
-            $saved = imagepng($canvas, $temporary, 6);
+            $saved = @imagepng($canvas, $temporary, 6);
         } elseif($mime === 'image/webp'){
-            $saved = imagewebp($canvas, $temporary, 86);
+            $saved = @imagewebp($canvas, $temporary, 86);
         }
     }
     imagedestroy($canvas);
     imagedestroy($source);
-    if($saved && is_file($temporary) && @copy($temporary, $path)){
+
+    $output = $saved ? @getimagesize($temporary) : false;
+    if($saved && $output && intval($output[0]) === $cover['width'] && intval($output[1]) === $cover['height'] && @copy($temporary, $path)){
         @unlink($temporary);
         @chmod($path, 0644);
         $info['resized'] = true;
-        $info['message'] = '上传成功，图片已从 '.$image[0].'×'.$image[1].' 等比缩小为 '.$fit['width'].'×'.$fit['height'];
+        $info['message'] = '上传成功，图片已居中裁切并输出为 '.$cover['width'].'×'.$cover['height'].'。';
         return true;
     }
-    if(is_file($temporary)) @unlink($temporary);
-    $info['width'] = intval($image[0]);
-    $info['height'] = intval($image[1]);
-    $info['message'] = '上传成功，图片缩放失败，前台会完整等比适配原图';
-    return true;
+
+    if($temporary !== false && is_file($temporary)) @unlink($temporary);
+    $info['message'] = '广告图片裁切失败，未保存该文件。';
+    return false;
 }
 
 function qifu_ad_upload_image($file, $directory, $prefix, $position, &$error, &$info){
@@ -135,7 +192,11 @@ function qifu_ad_upload_image($file, $directory, $prefix, $position, &$error, &$
     $filename = qifu_safe_image_upload($file, $directory, $prefix, $error);
     if($filename === false) return false;
     $path = rtrim($directory, '/\\').DIRECTORY_SEPARATOR.$filename;
-    qifu_ad_resize_saved_image($path, $position, $info);
+    if(!qifu_ad_resize_saved_image($path, $position, $info)){
+        @unlink($path);
+        $error = !empty($info['message']) ? $info['message'] : '广告图片处理失败';
+        return false;
+    }
     return $filename;
 }
 
@@ -226,10 +287,17 @@ function qifu_ad_ensure_config(){
 function qifu_ad_normalize_url($url){
     $url = trim((string)$url);
     if($url === '') return '';
-    if(strpos($url, '//') === 0) return 'https:'.$url;
-    if(preg_match('/^https?:\/\//i', $url)) return $url;
+    if(strpos($url, '//') === 0) $url = 'https:'.$url;
+    if(preg_match('/^https?:\/\//i', $url)){
+        $parts = @parse_url($url);
+        return $parts && !empty($parts['host']) ? $url : '';
+    }
+    if(preg_match('/^mailto:[^\s@]+@[^\s@]+(?:\?[^\s]*)?$/i', $url)) return $url;
+    if(preg_match('/^tel:[0-9+(). -]{3,}$/i', $url)) return $url;
+    if(preg_match('#^(?:/|\./|\.\./|\?|\#)[^\s]*$#', $url)) return $url;
+    if(preg_match('#^images/(?:ad|bg|logo|avatar)/[^\s]+$#i', $url)) return '/'.$url;
     if(preg_match('/^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i', $url)) return 'https://'.$url;
-    return $url;
+    return '';
 }
 
 function qifu_ad_is_active($ad, $now = null){
@@ -270,7 +338,7 @@ function qifu_ad_seed_legacy(){
                 'slot' => $i,
                 'title' => isset($conf['ad_title'.$suffix]) ? $conf['ad_title'.$suffix] : '',
                 'image' => qifu_media_normalize_url($conf['ad_image'.$suffix], $rooturl),
-                'link' => isset($conf['ad_link'.$suffix]) ? $conf['ad_link'.$suffix] : '',
+                'link' => qifu_ad_normalize_url(isset($conf['ad_link'.$suffix]) ? $conf['ad_link'.$suffix] : ''),
                 'alt' => isset($conf['ad_alt'.$suffix]) ? $conf['ad_alt'.$suffix] : '',
                 'sort' => 100 + $i,
             );
@@ -283,7 +351,7 @@ function qifu_ad_seed_legacy(){
                 'slot' => 1,
                 'title' => isset($conf['ad_'.$old.'_title']) ? $conf['ad_'.$old.'_title'] : '',
                 'image' => qifu_media_normalize_url($conf['ad_'.$old.'_image'], $rooturl),
-                'link' => isset($conf['ad_'.$old.'_link']) ? $conf['ad_'.$old.'_link'] : '',
+                'link' => qifu_ad_normalize_url(isset($conf['ad_'.$old.'_link']) ? $conf['ad_'.$old.'_link'] : ''),
                 'alt' => isset($conf['ad_'.$old.'_alt']) ? $conf['ad_'.$old.'_alt'] : '',
                 'sort' => 100,
             );
@@ -317,7 +385,10 @@ function qifu_ad_all(){
         LEFT JOIN web_ad_stats s ON a.id=s.ad_id
         GROUP BY a.id
         ORDER BY a.position ASC,a.slot ASC,a.sort ASC,a.id ASC");
-    foreach($rows as &$row) $row['image'] = qifu_media_normalize_url($row['image'], $rooturl);
+    foreach($rows as &$row){
+        $row['image'] = qifu_media_normalize_url($row['image'], $rooturl);
+        $row['link'] = qifu_ad_normalize_url(isset($row['link']) ? $row['link'] : '');
+    }
     unset($row);
     return $rows;
 }
@@ -336,6 +407,7 @@ function qifu_ad_front_groups(){
     );
     foreach($rows as $row){
         $row['image'] = qifu_media_normalize_url($row['image'], $rooturl);
+        $row['link'] = qifu_ad_normalize_url(isset($row['link']) ? $row['link'] : '');
         $position = isset($groups[$row['position']]) ? $row['position'] : 'below_search';
         $slot = $position == 'below_search' ? max(1, min(4, intval($row['slot']))) : 1;
         $groups[$position][$slot][] = $row;

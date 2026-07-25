@@ -1,22 +1,40 @@
 <?php
-/* 祈福导航系统 V1.5 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
 
 if(extension_loaded('mysqli')) {
     class DB {
-        private static $link;
+		private static $link;
+		private static $error = '';
+		private static $errno = 0;
 		public static function connect($db_host,$db_user,$db_pass,$db_name,$db_port){
-			self::$link = @mysqli_connect($db_host, $db_user, $db_pass, $db_name, $db_port);
+			// PHP 8.1+ may throw mysqli_sql_exception for connection failures.
+			// The installer needs to render a recoverable validation message instead
+			// of terminating before the step 3 result page can be sent.
+			if(function_exists('mysqli_report')) mysqli_report(MYSQLI_REPORT_OFF);
+			self::$error = '';
+			self::$errno = 0;
+			try {
+				self::$link = @mysqli_connect($db_host, $db_user, $db_pass, $db_name, $db_port);
+			} catch(Throwable $error) {
+				self::$link = false;
+				self::$error = $error->getMessage();
+				self::$errno = intval($error->getCode());
+				return false;
+			}
 			if(self::$link){
 				mysqli_query(self::$link, "set sql_mode = ''");
 				mysqli_query(self::$link, "set names utf8");
+			} else {
+				self::$errno = function_exists('mysqli_connect_errno') ? intval(mysqli_connect_errno()) : 0;
+				self::$error = function_exists('mysqli_connect_error') ? (string)mysqli_connect_error() : '';
 			}
 			return self::$link;
 		}
 		public static function connect_errno(){
-			return mysqli_connect_errno();
+			return self::$errno ?: (function_exists('mysqli_connect_errno') ? mysqli_connect_errno() : 0);
 		}
 		public static function connect_error(){
-			return mysqli_connect_error();
+			return self::$error !== '' ? self::$error : (function_exists('mysqli_connect_error') ? mysqli_connect_error() : '');
 		}
 		public static function fetch($q){
 			return $q ? mysqli_fetch_assoc($q) : false;

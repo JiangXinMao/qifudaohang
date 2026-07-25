@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.5 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
  
 error_reporting(0);
 define('CACHE_FILE', 0);
@@ -138,6 +138,14 @@ exit();
 
 //连接数据库
 include_once(SYSTEM_ROOT."db.class.php");
+if(!defined('SQLITE') && !extension_loaded('mysqli') && !extension_loaded('pdo_mysql')){
+    $database_extension_message = '服务器未启用 MySQL 数据库扩展，请在宝塔 PHP 设置中安装并启用 mysqli 或 pdo_mysql 后重试。';
+    if(function_exists('dh_json_exit')) dh_json_exit($database_extension_message, 503);
+    http_response_code(503);
+    header('Content-Type: text/html; charset=UTF-8');
+    echo '<!doctype html><meta charset="utf-8"><title>后台环境配置提示</title><p style="font:16px/1.8 system-ui;padding:48px">'.htmlspecialchars($database_extension_message, ENT_QUOTES, 'UTF-8').'</p>';
+    exit;
+}
 $DB=new DB($dbconfig['host'],$dbconfig['user'],$dbconfig['pwd'],$dbconfig['dbname'],$dbconfig['port']);
 
 if($DB->query("select * from web_config where 1")==FALSE)//检测安装2
@@ -207,7 +215,11 @@ qifu_ad_seed_legacy();
 include_once(SYSTEM_ROOT."member.php");
 include_once(SYSTEM_ROOT."version.php");
 include_once(SYSTEM_ROOT."brand.php");
-include_once(SYSTEM_ROOT."telemetry.php");
+// The optional telemetry SDK targets PHP 8.0+.  Do not parse it on older
+// BaoTa installations: a PHP 7 parser would fail the whole request before
+// the admin shell can render.  Core site and admin functionality remains
+// available without telemetry on those runtimes.
+if(PHP_VERSION_ID >= 80200) include_once(SYSTEM_ROOT."telemetry.php");
 
 $qifu_config_changed = false;
 if(!isset($conf['version']) || (string)$conf['version'] !== (string)VERSION){
@@ -234,6 +246,6 @@ if(qifu_admin_request_is_admin($admin_script, ROOT, $admin_directory) && strtoup
 
 // Anonymous product-health event. The optional SDK queues failures and never
 // changes the request response when Sodium or the remote service is absent.
-qifu_telemetry_track_daily('app_ready', true);
+if(function_exists('qifu_telemetry_track_daily')) qifu_telemetry_track_daily('app_ready', true);
 
 ?>

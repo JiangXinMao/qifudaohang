@@ -284,7 +284,7 @@
                   v-model="settingsDraft.gongan_beian_url"
                   placeholder="https://beian.mps.gov.cn/" /></ElFormItem></ElForm
             ><div class="form-actions"
-              ><ElButton type="primary" @click="saveSettings">保存基本设置</ElButton></div
+              ><ElButton type="primary" :loading="settingsSaving" @click="saveSettings">保存基本设置</ElButton></div
             ></ElTabPane
           ><ElTabPane label="搜索与统计" name="stats"
             ><ElForm label-position="top" class="form-grid"
@@ -304,7 +304,7 @@
                     label="随机演示数据"
                     value="random" /></ElSelect></ElFormItem></ElForm
             ><div class="form-actions"
-              ><ElButton type="primary" @click="saveSettings">保存统计设置</ElButton></div
+              ><ElButton type="primary" :loading="settingsSaving" @click="saveSettings">保存统计设置</ElButton></div
             ></ElTabPane
           ><ElTabPane label="页脚备案" name="footer"
             ><ElForm label-position="top"
@@ -317,7 +317,7 @@
               ><ElFormItem label="公安网安备"
                 ><ElInput v-model="settingsDraft.gongan_beian" /></ElFormItem></ElForm
             ><div class="form-actions"
-              ><ElButton type="primary" @click="saveSettings">保存备案设置</ElButton></div
+              ><ElButton type="primary" :loading="settingsSaving" @click="saveSettings">保存备案设置</ElButton></div
             ></ElTabPane
           ></ElTabs
         ></ElCard
@@ -325,12 +325,9 @@
     >
 
     <template v-else-if="pageName === 'Sites'"
-      ><PageTitle icon="Globe" title="站点管理" desc="维护前台导航站点、分类和显示状态。"
-        ><ElButton type="primary" @click="openSite()"
-          ><ElIcon><Plus /></ElIcon>新增站点</ElButton
-        ></PageTitle
-      ><ElCard shadow="never" class="art-card"
-        ><div class="toolbar"
+      ><PageTitle icon="Globe" title="站点管理" desc="维护前台导航站点、分类和显示状态。" />
+      <ElCard shadow="never" class="art-card"
+        ><div class="toolbar site-management-toolbar"
           ><ElInput
             v-model="siteKeyword"
             clearable
@@ -342,9 +339,25 @@
               :key="cat.id"
               :label="cat.name"
               :value="cat.name" /></ElSelect
-          ><ElButton type="primary" @click="refresh">筛选</ElButton></div
-        ><ElTable :data="filteredSites" row-key="id" stripe
-          ><ElTableColumn label="图标" width="76" align="center"
+          ><ElButton type="primary" @click="refresh()">筛选</ElButton
+          ><ElButton
+            type="danger"
+            plain
+            :disabled="selectedSiteCount === 0 || siteBatchDeleting"
+            :loading="siteBatchDeleting"
+            @click="removeSelectedSites"
+            ><ElIcon><Delete /></ElIcon>批量删除</ElButton
+          ><ElButton type="primary" @click="openSite()"
+            ><ElIcon><Plus /></ElIcon>新增站点</ElButton
+          ></div
+        ><ElTable
+          ref="siteTableRef"
+          :data="filteredSites"
+          row-key="id"
+          stripe
+          @selection-change="handleSiteSelectionChange"
+          ><ElTableColumn type="selection" width="48" align="center" />
+          <ElTableColumn label="图标" width="76" align="center"
             ><template #default="scope"
               ><div class="site-list-icon-cell"
                 ><img
@@ -504,7 +517,7 @@
               :inactive-value="0" /></ElFormItem></ElForm
         ><template #footer
           ><ElButton @click="siteDialog = false">取消</ElButton
-          ><ElButton type="primary" @click="saveSite(siteForm)">保存</ElButton></template
+          ><ElButton type="primary" :loading="siteSaving" @click="saveSite(siteForm)">保存</ElButton></template
         ></ElDialog
       ></template
     >
@@ -514,12 +527,26 @@
         icon="Folder"
         title="分类管理"
         desc="管理前台标签栏显示的分类、图标、排序和启用状态。"
-        ><ElButton type="primary" @click="openCategory()"
-          ><ElIcon><Plus /></ElIcon>新增分类</ElButton
+        ><div class="page-title-actions"
+          ><ElButton
+            type="danger"
+            plain
+            :disabled="selectedCategoryCount === 0 || categoryBatchDeleting"
+            :loading="categoryBatchDeleting"
+            @click="removeSelectedCategories"
+            ><ElIcon><Delete /></ElIcon>批量删除</ElButton
+          ><ElButton type="primary" @click="openCategory()"
+            ><ElIcon><Plus /></ElIcon>新增分类</ElButton
+          ></div
         ></PageTitle
       >
       <ElCard shadow="never" class="art-card">
-        <ElTable :data="data.categories" stripe>
+        <ElTable
+          ref="categoryTableRef"
+          :data="data.categories"
+          stripe
+          @selection-change="handleCategorySelectionChange"
+          ><ElTableColumn type="selection" width="48" align="center" />
           <ElTableColumn label="图标" width="90"
             ><template #default="scope"
               ><span class="category-list-icon" :aria-label="`${scope.row.name}图标`">{{
@@ -539,7 +566,7 @@
               }}</ElTag></template
             ></ElTableColumn
           >
-          <ElTableColumn label="操作" width="196" fixed="right" align="right" header-align="right"
+          <ElTableColumn label="操作" width="196" fixed="right" align="right" header-align="center"
             ><template #default="scope"
               ><div class="site-row-actions"
                 ><ElButton
@@ -643,7 +670,7 @@
         </ElForm>
         <template #footer
           ><ElButton @click="categoryDialog = false">取消</ElButton
-          ><ElButton type="primary" @click="saveCategory">保存</ElButton></template
+          ><ElButton type="primary" :loading="categorySaving" @click="saveCategory">保存</ElButton></template
         >
       </ElDialog>
     </template>
@@ -790,6 +817,11 @@
               v-model="adsDraft.ad_show_left"
               active-value="1"
               inactive-value="0" /></ElFormItem
+          ><ElFormItem label="新窗口打开"
+            ><ElSwitch
+              v-model="adsDraft.ad_new_window"
+              active-value="1"
+              inactive-value="0" /></ElFormItem
           ><ElFormItem label="主广告图片"
             ><ElInput v-model="adsDraft.ad_image" placeholder="上传后自动回填地址" /><input
               class="native-file"
@@ -801,7 +833,7 @@
           ><ElFormItem label="广告替代文本"
             ><ElInput v-model="adsDraft.ad_alt" /></ElFormItem></ElForm
         ><div class="form-actions"
-          ><ElButton type="primary" @click="saveAds">保存广告设置</ElButton></div
+          ><ElButton type="primary" :loading="adsSaving" @click="saveAds">保存广告设置</ElButton></div
         ></ElCard
       ></template
     >
@@ -811,7 +843,7 @@
         icon="Document"
         title="操作日志"
         desc="记录后台设置、内容维护和数据操作，用于安全审计与问题追踪。"
-        ><ElButton type="danger" plain @click="clearLogs"
+        ><ElButton type="danger" plain :loading="logClearing" @click="clearLogs"
           ><ElIcon><Delete /></ElIcon>清空日志</ElButton
         ></PageTitle
       ><ElCard shadow="never" class="art-card"
@@ -828,7 +860,7 @@
               :key="item"
               :label="item"
               :value="item" /></ElSelect
-          ><ElButton type="primary" @click="refresh">筛选</ElButton
+          ><ElButton type="primary" @click="refresh()">筛选</ElButton
           ><ElText type="info">共 {{ data.logs.length }} 条记录</ElText></div
         ><ElTable :data="filteredLogs" stripe
           ><ElTableColumn prop="addtime" label="时间" width="170"
@@ -1250,7 +1282,7 @@
             </a>
             <a
               class="system-project-link"
-              href="https://www.jiangxinmao.com"
+              href="https://api.jiangxinmao.com"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -1258,8 +1290,8 @@
                 ><ElIcon><Monitor /></ElIcon
               ></span>
               <span class="system-project-link-copy"
-                ><b>官网 <ElTag size="small" type="info" effect="plain">建设中</ElTag></b
-                ><small>www.jiangxinmao.com</small></span
+                ><b>匠心猫AI <ElTag size="small" type="info" effect="plain">20xpro</ElTag></b
+                ><small>api.jiangxinmao.com</small></span
               >
               <ElIcon class="system-project-link-arrow" aria-hidden="true"><Link /></ElIcon>
             </a>
@@ -1504,21 +1536,15 @@
 
 <script setup lang="ts">
   import {
-    qifuAction,
-    qifuApplyUpdate,
     qifuBootstrap,
     qifuCheckUpdates,
     qifuProfile,
-    qifuRestoreBackup,
     qifuSaveProfile,
-    qifuSiteMeta,
     qifuSiteStats,
     qifuSystemInfo,
     qifuTrend,
     qifuUpdateProgress,
     qifuUpdateStatus,
-    qifuUpload,
-    qifuUploadAvatar,
     type QifuBootstrap,
     type QifuProfile,
     type QifuSiteMetric,
@@ -1527,6 +1553,15 @@
     type QifuUpdateProgress,
     type QifuUpdateStatus
   } from '@/api/qifu'
+  import {
+    qifuActionOptimized,
+    qifuApplyUpdateOptimized,
+    qifuRestoreBackupOptimized,
+    qifuSiteMetaOptimized,
+    qifuUploadOptimized,
+    qifuUploadAvatarOptimized,
+    setCsrfToken
+  } from '@/api/qifu-optimized'
   import { qifuSuccess } from '@/utils/qifu-notification'
   import { refreshQifuBrand } from '@/composables/useQifuBrand'
   import { qifuChangeLog } from './qifu-changelog'
@@ -1571,6 +1606,7 @@
   const { switchThemeStyles } = useTheme()
   const { width: viewportWidth } = useWindowSize()
   const loading = ref(true)
+  const initialLoadComplete = ref(false)
   const trendRefreshing = ref(false)
   const selectedTrendDate = ref('')
   const trendMetric = ref<QifuSiteMetric>('views')
@@ -1578,6 +1614,11 @@
     { label: '浏览量', value: 'views' },
     { label: '点击量', value: 'clicks' }
   ]
+  const settingsSaving = ref(false)
+  const adsSaving = ref(false)
+  const categorySaving = ref(false)
+  const siteSaving = ref(false)
+  const logClearing = ref(false)
   const trendMetricLabel = computed(() => (trendMetric.value === 'views' ? '浏览' : '点击'))
   const siteStatRows = ref<QifuSiteStatRow[]>([])
   const siteStatTotal = computed(() =>
@@ -1591,6 +1632,12 @@
   const categoryIconKeyword = ref('')
   const siteKeyword = ref('')
   const siteCategory = ref('')
+  const siteTableRef = ref<any>()
+  const categoryTableRef = ref<any>()
+  const selectedSiteIds = ref<number[]>([])
+  const selectedCategoryIds = ref<number[]>([])
+  const siteBatchDeleting = ref(false)
+  const categoryBatchDeleting = ref(false)
   const logAction = ref('')
   const logTarget = ref('')
   const backupCreating = ref(false)
@@ -1755,8 +1802,8 @@
     { key: 'complete', label: '更新完成', note: '切换最新版本', threshold: 100 }
   ] as const
   const updateState = reactive<QifuUpdateStatus>({
-    currentVersion: 'V1.5.0',
-    latestVersion: qifuChangeLog[0]?.version || 'V1.5.0',
+    currentVersion: 'V1.7',
+    latestVersion: qifuChangeLog[0]?.version || 'V1.7',
     remoteVersion: '',
     updateAvailable: false,
     serviceAvailable: true,
@@ -1767,7 +1814,7 @@
       recordedAt: 0
     }))
   })
-  const currentVersion = computed(() => updateState.currentVersion || 'V1.5.0')
+  const currentVersion = computed(() => updateState.currentVersion || 'V1.7')
   const updateHistory = computed(() => updateState.history)
   const latestTimelineVersion = computed(
     () => updateHistory.value[0]?.version || currentVersion.value
@@ -1913,6 +1960,8 @@
             .includes(siteKeyword.value.toLowerCase()))
     )
   )
+  const selectedSiteCount = computed(() => selectedSiteIds.value.length)
+  const selectedCategoryCount = computed(() => selectedCategoryIds.value.length)
   const pendingLinks = computed(() => data.links.filter((item: any) => Number(item.status) === 0))
   const approvedLinks = computed(() => data.links.filter((item: any) => Number(item.status) === 1))
   const linkEnabled = computed({
@@ -1961,8 +2010,27 @@
     newpwd2: [{ required: true, message: '请确认新密码', trigger: 'blur' }]
   }
 
-  function refresh() {
+  function refresh(force = false) {
     if (refreshRequest) return refreshRequest
+    // After initial load, refresh silently without skeleton
+    if (initialLoadComplete.value && !force) {
+      refreshRequest = (async () => {
+        try {
+          const result = await qifuBootstrap()
+          Object.assign(data, result)
+          Object.assign(settingsDraft, result.settings)
+          Object.assign(adsDraft, result.ads)
+          setCsrfToken(result.csrf)
+          if (!passwordForm.username) passwordForm.username = result.user.userName
+        } catch (error: any) {
+          ElMessage.error(error?.message || '后台数据加载失败')
+        } finally {
+          refreshRequest = null
+        }
+      })()
+      return refreshRequest
+    }
+    // Initial load with skeleton
     loading.value = true
     refreshRequest = (async () => {
       try {
@@ -1970,7 +2038,9 @@
         Object.assign(data, result)
         Object.assign(settingsDraft, result.settings)
         Object.assign(adsDraft, result.ads)
+        setCsrfToken(result.csrf)
         if (!passwordForm.username) passwordForm.username = result.user.userName
+        initialLoadComplete.value = true
       } catch (error: any) {
         ElMessage.error(error?.message || '后台数据加载失败')
       } finally {
@@ -2079,7 +2149,7 @@
     if (!file || profileAvatarUploading.value) return
     profileAvatarUploading.value = true
     try {
-      applyProfile(await qifuUploadAvatar(file))
+      applyProfile(await qifuUploadAvatarOptimized(file))
       qifuSuccess('头像已更新', '右上角个人菜单已同步显示新头像。')
     } catch (error: any) {
       ElMessage.error(error?.message || '头像上传失败')
@@ -2179,7 +2249,7 @@
     })
     void pollOnlineUpdateProgress(operationId, pollToken)
     try {
-      const result = await qifuApplyUpdate(operationId)
+      const result = await qifuApplyUpdateOptimized(operationId)
       updateState.currentVersion = result.version
       updateState.updateAvailable = false
       Object.assign(updateProgress, {
@@ -2331,7 +2401,7 @@
     siteMetaStatus.value = 'loading'
     siteMetaMessage.value = '正在获取网站名称和描述…'
     try {
-      const meta = await qifuSiteMeta(rawUrl)
+      const meta = await qifuSiteMetaOptimized(rawUrl)
       if (requestId !== siteMetaRequestId) return
       const filled: string[] = []
       const preserved: string[] = []
@@ -2416,27 +2486,51 @@
   }
   const openCategory = resetCategory
   async function saveSettings() {
-    await qifuAction('save_settings', { settings: { ...settingsDraft } })
-    await refreshQifuBrand()
-    qifuSuccess('设置已保存', '新配置已同步到后台与前台。')
-    await refresh()
+    if (settingsSaving.value) return
+    settingsSaving.value = true
+    try {
+      await qifuActionOptimized('save_settings', { settings: { ...settingsDraft } })
+      await refreshQifuBrand()
+      qifuSuccess('设置已保存', '新配置已同步到后台与前台。')
+      await refresh()
+    } catch (error: any) {
+      ElMessage.error(error?.message || '设置保存失败')
+    } finally {
+      settingsSaving.value = false
+    }
   }
   async function saveAds() {
-    await qifuAction('ad_save', { settings: { ...adsDraft } })
-    qifuSuccess('广告设置已保存', '广告展示规则已按新配置更新。')
-    await refresh()
+    if (adsSaving.value) return
+    adsSaving.value = true
+    try {
+      await qifuActionOptimized('ad_save', { settings: { ...adsDraft } })
+      qifuSuccess('广告设置已保存', '广告展示规则已按新配置更新。')
+      await refresh()
+    } catch (error: any) {
+      ElMessage.error(error?.message || '广告设置保存失败')
+    } finally {
+      adsSaving.value = false
+    }
   }
   async function saveSite(row: any) {
+    if (siteSaving.value) return
+    siteSaving.value = true
     const payload = { ...row, active: Number(row.active) === 1 ? 1 : 0 }
     resetSiteMetaState(payload.url)
-    const result = await qifuAction<{ id: number }>('site_save', payload)
-    const saved = { ...payload, id: Number(result?.id || payload.id) }
-    const index = data.sites.findIndex((site: any) => Number(site.id) === saved.id)
-    if (index >= 0) Object.assign(data.sites[index], saved)
-    else data.sites.unshift(saved)
-    syncSiteStats()
-    siteDialog.value = false
-    qifuSuccess('站点已保存', '站点信息与显示状态已更新。')
+    try {
+      const result = await qifuActionOptimized<{ id: number }>('site_save', payload)
+      const saved = { ...payload, id: Number(result?.id || payload.id) }
+      const index = data.sites.findIndex((site: any) => Number(site.id) === saved.id)
+      if (index >= 0) Object.assign(data.sites[index], saved)
+      else data.sites.unshift(saved)
+      syncSiteStats()
+      siteDialog.value = false
+      qifuSuccess('站点已保存', '站点信息与显示状态已更新。')
+    } catch (error: any) {
+      ElMessage.error(error?.message || '站点保存失败')
+    } finally {
+      siteSaving.value = false
+    }
   }
   async function saveSiteStatus(row: any, value: unknown) {
     const id = Number(row.id)
@@ -2446,7 +2540,7 @@
     savingSiteStatusIds.add(id)
     row.active = active
     try {
-      await qifuAction('site_save', { ...row, active })
+      await qifuActionOptimized('site_save', { ...row, active })
       syncSiteStats()
       qifuSuccess('站点状态已更新', active === 1 ? '站点已在前台显示。' : '站点已从前台隐藏。')
     } catch (error: any) {
@@ -2458,25 +2552,87 @@
     }
   }
   async function removeSite(row: any) {
-    await ElMessageBox.confirm(`确定删除“${row.name}”？`, '删除站点', { type: 'warning' })
-    await qifuAction('site_delete', { id: row.id })
+    await ElMessageBox.confirm(`确定删除”${row.name}”？`, '删除站点', { type: 'warning' })
+    await qifuActionOptimized('site_delete', { id: row.id })
     qifuSuccess('站点已删除', '站点列表已同步更新。')
     await refresh()
   }
+  function handleSiteSelectionChange(rows: any[]) {
+    selectedSiteIds.value = rows
+      .map((row) => Number(row.id))
+      .filter((id) => Number.isInteger(id) && id > 0)
+  }
+  function clearSiteSelection() {
+    selectedSiteIds.value = []
+    siteTableRef.value?.clearSelection()
+  }
+  async function removeSelectedSites() {
+    const ids = [...selectedSiteIds.value]
+    const count = ids.length
+    if (!count || siteBatchDeleting.value) return
+    await ElMessageBox.confirm(`确定永久删除已选的 ${count} 个站点吗？此操作无法恢复。`, '批量删除站点', {
+      type: 'warning'
+    })
+    siteBatchDeleting.value = true
+    try {
+      const result = await qifuActionOptimized<{ deleted?: number }>('site_delete', { ids })
+      qifuSuccess('站点已批量删除', `已删除 ${Number(result?.deleted || 0)} 个站点。`)
+      clearSiteSelection()
+      await refresh()
+    } finally {
+      siteBatchDeleting.value = false
+    }
+  }
   async function saveCategory() {
-    await qifuAction('category_save', { ...categoryForm })
-    categoryDialog.value = false
-    qifuSuccess('分类已保存', '前台分类结构已同步更新。')
-    await refresh()
+    if (categorySaving.value) return
+    categorySaving.value = true
+    try {
+      await qifuActionOptimized('category_save', { ...categoryForm })
+      categoryDialog.value = false
+      qifuSuccess('分类已保存', '前台分类结构已同步更新。')
+      await refresh()
+    } catch (error: any) {
+      ElMessage.error(error?.message || '分类保存失败')
+    } finally {
+      categorySaving.value = false
+    }
   }
   async function removeCategory(row: any) {
-    await ElMessageBox.confirm(`确定删除“${row.name}”？`, '删除分类', { type: 'warning' })
-    await qifuAction('category_delete', { id: row.id })
+    await ElMessageBox.confirm(`确定删除”${row.name}”？`, '删除分类', { type: 'warning' })
+    await qifuActionOptimized('category_delete', { id: row.id })
     qifuSuccess('分类已删除', '分类列表已同步更新。')
     await refresh()
   }
+  function handleCategorySelectionChange(rows: any[]) {
+    selectedCategoryIds.value = rows
+      .map((row) => Number(row.id))
+      .filter((id) => Number.isInteger(id) && id > 0)
+  }
+  function clearCategorySelection() {
+    selectedCategoryIds.value = []
+    categoryTableRef.value?.clearSelection()
+  }
+  async function removeSelectedCategories() {
+    const ids = [...selectedCategoryIds.value]
+    const count = ids.length
+    if (!count || categoryBatchDeleting.value) return
+    await ElMessageBox.confirm(
+      `确定删除已选的 ${count} 个分类吗？分类下的站点不会被删除。`,
+      '批量删除分类',
+      { type: 'warning' }
+    )
+    categoryBatchDeleting.value = true
+    try {
+      const result = await qifuActionOptimized<{ deleted?: number }>('category_delete', { ids })
+      qifuSuccess('分类已批量删除', `已删除 ${Number(result?.deleted || 0)} 个分类。`)
+      clearCategorySelection()
+      await refresh()
+    } finally {
+      categoryBatchDeleting.value = false
+    }
+  }
   async function toggleLinks() {
-    await qifuAction('link_toggle', { enabled: linkEnabled.value ? 1 : 0 })
+    await qifuActionOptimized('link_toggle', { enabled: linkEnabled.value ? 1 : 0 })
     qifuSuccess('友链入口设置已更新', '前台友链入口状态已同步。')
   }
   async function toggleLinkMailNotify(value: string | number | boolean) {
@@ -2489,7 +2645,7 @@
     if (linkMailSaving.value) return
     linkMailSaving.value = true
     try {
-      await qifuAction('link_mail_toggle', { enabled: enabled ? 1 : 0 })
+      await qifuActionOptimized('link_mail_toggle', { enabled: enabled ? 1 : 0 })
       qifuSuccess(
         '邮件提醒设置已更新',
         enabled ? '新的友链申请将推送到收件邮箱。' : '新的友链申请将不再发送邮件提醒。'
@@ -2502,21 +2658,29 @@
     }
   }
   async function auditLink(row: any, status: number) {
-    await qifuAction('link_audit', { id: row.id, status })
+    await qifuActionOptimized('link_audit', { id: row.id, status })
     qifuSuccess(status === 1 ? '友链已通过' : '友链已拒绝', '审核结果已保存。')
     await refresh()
   }
   async function removeLink(row: any) {
-    await ElMessageBox.confirm(`确定删除“${row.name}”？`, '删除友链', { type: 'warning' })
-    await qifuAction('link_delete', { id: row.id })
+    await ElMessageBox.confirm(`确定删除”${row.name}”？`, '删除友链', { type: 'warning' })
+    await qifuActionOptimized('link_delete', { id: row.id })
     qifuSuccess('友链已删除', '友链列表已同步更新。')
     await refresh()
   }
   async function clearLogs() {
+    if (logClearing.value) return
     await ElMessageBox.confirm('清空后无法恢复，确定继续吗？', '清空日志', { type: 'warning' })
-    await qifuAction('logs_clear')
-    qifuSuccess('日志已清理', '操作日志列表已更新。')
-    await refresh()
+    logClearing.value = true
+    try {
+      await qifuActionOptimized('logs_clear')
+      qifuSuccess('日志已清理', '操作日志列表已更新。')
+      await refresh()
+    } catch (error: any) {
+      ElMessage.error(error?.message || '日志清理失败')
+    } finally {
+      logClearing.value = false
+    }
   }
   async function createBackup() {
     if (backupCreating.value) return
@@ -2530,7 +2694,7 @@
       if (backupProgress.value >= 46) backupStage.value = 'writing'
     }, 280)
     try {
-      const result = await qifuAction<{ tableCount: number; rowCount: number }>('backup_create')
+      const result = await qifuActionOptimized<{ tableCount: number; rowCount: number }>('backup_create')
       backupStage.value = 'verifying'
       backupProgress.value = 92
       const remaining = Math.max(0, 1800 - (Date.now() - startedAt))
@@ -2583,7 +2747,7 @@
     if (!restoreFile.value || !restorePassword.value || restoreBusy.value) return
     restoreBusy.value = true
     try {
-      const result = await qifuRestoreBackup(restoreFile.value, restorePassword.value)
+      const result = await qifuRestoreBackupOptimized(restoreFile.value, restorePassword.value)
       restoreDialog.value = false
       qifuSuccess(
         '数据恢复完成',
@@ -2598,7 +2762,7 @@
   }
   async function deleteBackup(row: any) {
     await ElMessageBox.confirm('确定删除这个备份文件？', '删除备份', { type: 'warning' })
-    await qifuAction('backup_delete', { id: row.id })
+    await qifuActionOptimized('backup_delete', { id: row.id })
     qifuSuccess('备份已删除', '备份文件列表已同步更新。')
     await refresh()
   }
@@ -2609,7 +2773,7 @@
     if (!passwordFormRef.value) return
     const valid = await passwordFormRef.value.validate().catch(() => false)
     if (!valid) return
-    await qifuAction('password_change', { ...passwordForm })
+    await qifuActionOptimized('password_change', { ...passwordForm })
     qifuSuccess('账号安全设置已更新', '登录凭据已更新，即将返回登录页。')
     setTimeout(() => router.push({ name: 'Login' }), 800)
   }
@@ -2618,7 +2782,7 @@
     const file = input.files?.[0]
     if (!file) return
     try {
-      const result = await qifuUpload(file, key, position, data.csrf)
+      const result = await qifuUploadOptimized(file, key, position)
       adsDraft[key] = result.url
       qifuSuccess('图片上传成功', '广告素材地址已自动回填。')
     } catch (error: any) {
@@ -2629,7 +2793,7 @@
   }
 
   onMounted(refresh)
-  watch(() => route.name, refresh)
+  watch([siteKeyword, siteCategory], () => clearSiteSelection())
   watch(
     pageName,
     (name) => {

@@ -186,18 +186,54 @@ final class DataCabinTelemetry
         $expected = max(0, (int)($update['file_size'] ?? 0));
         $limit = min(2147483648, $expected > 0 ? $expected + 1048576 : 2147483648);
         try {
-            $context = stream_context_create(['http'=>['timeout'=>min(120.0,max(2.0,$timeout)),'follow_location'=>0,'header'=>'User-Agent: DataCabin-PHP/'.self::SDK_VERSION."\r\n"]]);
-            $input = @fopen($url, 'rb', false, $context);
             $output = @fopen($temporary, 'wb');
-            if (!$input || !$output) { if(is_resource($input))fclose($input);if(is_resource($output))fclose($output);@unlink($temporary);return null; }
+            if (!$output) { @unlink($temporary); return null; }
             $total = 0;
-            while (!feof($input)) {
-                $chunk = fread($input, 1048576);
-                if ($chunk === false) throw new RuntimeException('download_read_failed');
-                $total += strlen($chunk);
-                if ($total > $limit || fwrite($output, $chunk) !== strlen($chunk)) throw new RuntimeException('download_write_failed');
+            if (function_exists('curl_init')) {
+                $tooLarge = false;
+                $curl = curl_init($url);
+                $options = [
+                    CURLOPT_FOLLOWLOCATION=>false,
+                    CURLOPT_CONNECTTIMEOUT=>10,
+                    CURLOPT_TIMEOUT=>(int)ceil(min(120.0,max(2.0,$timeout))),
+                    CURLOPT_SSL_VERIFYPEER=>true,
+                    CURLOPT_SSL_VERIFYHOST=>2,
+                    CURLOPT_USERAGENT=>'DataCabin-PHP/'.self::SDK_VERSION,
+                    CURLOPT_WRITEFUNCTION=>static function($handle, string $chunk) use ($output, &$total, $limit, &$tooLarge): int {
+                        $length = strlen($chunk);
+                        $total += $length;
+                        if ($total > $limit) { $tooLarge = true; return 0; }
+                        return fwrite($output, $chunk) === $length ? $length : 0;
+                    },
+                ];
+                if (defined('CURLOPT_PROTOCOLS')) $options[CURLOPT_PROTOCOLS] = $localHttp ? CURLPROTO_HTTP : CURLPROTO_HTTPS;
+                $caFile = self::caFile();
+                if ($caFile !== '') $options[CURLOPT_CAINFO] = $caFile;
+                curl_setopt_array($curl, $options);
+                $success = curl_exec($curl);
+                $status = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                curl_close($curl);
+                fclose($output);
+                if ($success === false || $tooLarge || $status < 200 || $status >= 300) throw new RuntimeException('download_read_failed');
+            } else {
+                $ssl = ['verify_peer'=>true,'verify_peer_name'=>true];
+                $caFile = self::caFile();
+                if ($caFile !== '') $ssl['cafile'] = $caFile;
+                $context = stream_context_create([
+                    'http'=>['timeout'=>min(120.0,max(2.0,$timeout)),'follow_location'=>0,'header'=>'User-Agent: DataCabin-PHP/'.self::SDK_VERSION."\r\n"],
+                    'ssl'=>$ssl,
+                ]);
+                $input = @fopen($url, 'rb', false, $context);
+                if (!$input) { fclose($output); @unlink($temporary); return null; }
+                while (!feof($input)) {
+                    $chunk = fread($input, 1048576);
+                    if ($chunk === false) throw new RuntimeException('download_read_failed');
+                    $total += strlen($chunk);
+                    if ($total > $limit || fwrite($output, $chunk) !== strlen($chunk)) throw new RuntimeException('download_write_failed');
+                }
+                fclose($input);
+                fclose($output);
             }
-            fflush($output);fclose($input);fclose($output);
             $verificationKeys=$this->trustedPublicKeys($publicKey);
             if (($expected > 0 && $total !== $expected) || !self::verifyUpdateFile($temporary, $update, $verificationKeys)) throw new RuntimeException('download_verify_failed');
             if (is_file($destination) && !@unlink($destination)) throw new RuntimeException('download_destination_busy');
@@ -361,17 +397,14 @@ final class DataCabinTelemetry
             $timestamp = (string)time();
             $nonce = bin2hex(random_bytes(16));
             $signature = hash_hmac('sha256', $timestamp."\n".$nonce."\n".$body, $this->appSecret);
-            $context = stream_context_create(['http'=>[
-                'method'=>'POST','timeout'=>$this->timeout,'ignore_errors'=>false,
-                'header'=>implode("\r\n",array_filter([
-                    'Content-Type: application/json','X-App-Key: '.$this->appKey,
-                    'X-Timestamp: '.$timestamp,'X-Nonce: '.$nonce,'X-Signature: '.$signature,
-                    'User-Agent: DataCabin-PHP/'.self::SDK_VERSION,'X-SDK-Version: '.self::SDK_VERSION,'X-Protocol-Version: '.self::PROTOCOL_VERSION,
-                    $this->credentialId!==''?'X-Credential-Id: '.$this->credentialId:null,
-                ])),'content'=>$body,
-            ]]);
-            $result = @file_get_contents($this->endpoint, false, $context);
-            if ($result === false || strlen($result) > 1048576) return false;
+            $headers = array_values(array_filter([
+                'Content-Type: application/json','X-App-Key: '.$this->appKey,
+                'X-Timestamp: '.$timestamp,'X-Nonce: '.$nonce,'X-Signature: '.$signature,
+                'User-Agent: DataCabin-PHP/'.self::SDK_VERSION,'X-SDK-Version: '.self::SDK_VERSION,'X-Protocol-Version: '.self::PROTOCOL_VERSION,
+                $this->credentialId!==''?'X-Credential-Id: '.$this->credentialId:null,
+            ]));
+            $result = self::postJson($this->endpoint, $body, $headers, $this->timeout);
+            if ($result === null) return false;
             $decoded = json_decode($result, true);
             return is_array($decoded) && !empty($decoded['ok']);
         } catch (Throwable) {
@@ -386,17 +419,14 @@ final class DataCabinTelemetry
             $timestamp = (string)time();
             $nonce = bin2hex(random_bytes(16));
             $signature = hash_hmac('sha256', $timestamp."\n".$nonce."\n".$body, $this->appSecret);
-            $context = stream_context_create(['http'=>[
-                'method'=>'POST','timeout'=>$this->timeout,'ignore_errors'=>false,
-                'header'=>implode("\r\n",array_filter([
-                    'Content-Type: application/json','X-App-Key: '.$this->appKey,
-                    'X-Timestamp: '.$timestamp,'X-Nonce: '.$nonce,'X-Signature: '.$signature,
-                    'User-Agent: DataCabin-PHP/'.self::SDK_VERSION,'X-SDK-Version: '.self::SDK_VERSION,'X-Protocol-Version: '.self::PROTOCOL_VERSION,
-                    $this->credentialId!==''?'X-Credential-Id: '.$this->credentialId:null,
-                ])),'content'=>$body,
-            ]]);
-            $result = @file_get_contents($endpoint, false, $context);
-            if ($result === false || strlen($result) > 1048576) return null;
+            $headers = array_values(array_filter([
+                'Content-Type: application/json','X-App-Key: '.$this->appKey,
+                'X-Timestamp: '.$timestamp,'X-Nonce: '.$nonce,'X-Signature: '.$signature,
+                'User-Agent: DataCabin-PHP/'.self::SDK_VERSION,'X-SDK-Version: '.self::SDK_VERSION,'X-Protocol-Version: '.self::PROTOCOL_VERSION,
+                $this->credentialId!==''?'X-Credential-Id: '.$this->credentialId:null,
+            ]));
+            $result = self::postJson($endpoint, $body, $headers, $this->timeout);
+            if ($result === null) return null;
             $decoded = json_decode($result, true);
             return is_array($decoded) ? $decoded : null;
         } catch (Throwable) {
@@ -412,6 +442,74 @@ final class DataCabinTelemetry
         $query['r'] = $route;
         $authority = $parts['scheme'].'://'.($parts['user']??'').(isset($parts['pass'])?':'.$parts['pass']:'').(isset($parts['user'])?'@':'').$parts['host'].(isset($parts['port'])?':'.$parts['port']:'');
         return $authority.($parts['path']??'/').'?'.http_build_query($query);
+    }
+
+    private static function caFile(): string
+    {
+        $candidates = [
+            ini_get('curl.cainfo'),
+            ini_get('openssl.cafile'),
+            '/etc/ssl/certs/ca-certificates.crt',
+            '/etc/pki/tls/certs/ca-bundle.crt',
+            '/etc/ssl/cert.pem',
+            __DIR__.'/certs/ca-bundle.crt',
+        ];
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $programFiles = getenv('ProgramFiles');
+            if ($programFiles) $candidates[] = rtrim($programFiles, '/\\').'\\Git\\mingw64\\etc\\ssl\\certs\\ca-bundle.crt';
+        }
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) && $candidate !== '' && is_file($candidate) && is_readable($candidate)) return $candidate;
+        }
+        return '';
+    }
+
+    private static function postJson(string $endpoint, string $body, array $headers, float $timeout): ?string
+    {
+        $parts = parse_url($endpoint);
+        $localHttp = is_array($parts) && ($parts['scheme']??'') === 'http' && in_array(strtolower((string)($parts['host']??'')), ['localhost','127.0.0.1'], true);
+        if (!is_array($parts) || (($parts['scheme']??'') !== 'https' && !$localHttp) || isset($parts['user']) || isset($parts['pass'])) return null;
+        $limit = 1048576;
+        if (function_exists('curl_init')) {
+            $response = '';
+            $tooLarge = false;
+            $curl = curl_init($endpoint);
+            $options = [
+                CURLOPT_POST=>true,
+                CURLOPT_POSTFIELDS=>$body,
+                CURLOPT_HTTPHEADER=>$headers,
+                CURLOPT_FOLLOWLOCATION=>false,
+                CURLOPT_CONNECTTIMEOUT=>min(10, (int)ceil($timeout)),
+                CURLOPT_TIMEOUT=>(int)ceil(min(30.0,max(0.2,$timeout))),
+                CURLOPT_SSL_VERIFYPEER=>true,
+                CURLOPT_SSL_VERIFYHOST=>2,
+                CURLOPT_WRITEFUNCTION=>static function($handle, string $chunk) use (&$response, &$tooLarge, $limit): int {
+                    if (strlen($response) + strlen($chunk) > $limit) { $tooLarge = true; return 0; }
+                    $response .= $chunk;
+                    return strlen($chunk);
+                },
+            ];
+            if (defined('CURLOPT_PROTOCOLS')) $options[CURLOPT_PROTOCOLS] = $localHttp ? CURLPROTO_HTTP : CURLPROTO_HTTPS;
+            $caFile = self::caFile();
+            if ($caFile !== '') $options[CURLOPT_CAINFO] = $caFile;
+            curl_setopt_array($curl, $options);
+            $success = curl_exec($curl);
+            $status = (int)curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+            return $success !== false && !$tooLarge && $status >= 200 && $status < 300 ? $response : null;
+        }
+        $ssl = ['verify_peer'=>true,'verify_peer_name'=>true];
+        $caFile = self::caFile();
+        if ($caFile !== '') $ssl['cafile'] = $caFile;
+        $context = stream_context_create([
+            'http'=>[
+                'method'=>'POST','timeout'=>$timeout,'ignore_errors'=>false,
+                'header'=>implode("\r\n",$headers),'content'=>$body,
+            ],
+            'ssl'=>$ssl,
+        ]);
+        $result = @file_get_contents($endpoint, false, $context);
+        return is_string($result) && strlen($result) <= $limit ? $result : null;
     }
 
     private function resolvedDeviceId(): string

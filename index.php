@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.5 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
 include __DIR__ . "/includes/common.php";
 include __DIR__ . "/includes/txprotect.php";
 include __DIR__ . "/includes/site_status.php";
@@ -123,7 +123,7 @@ function qifu_front_legacy_side_ad($conf, $side) {
         'slot' => 1,
         'title' => isset($conf['ad_'.$old.'_title']) ? $conf['ad_'.$old.'_title'] : '',
         'image' => $conf[$image_key],
-        'link' => isset($conf['ad_'.$old.'_link']) ? $conf['ad_'.$old.'_link'] : '',
+        'link' => qifu_ad_normalize_url(isset($conf['ad_'.$old.'_link']) ? $conf['ad_'.$old.'_link'] : ''),
         'alt' => isset($conf['ad_'.$old.'_alt']) ? $conf['ad_'.$old.'_alt'] : '',
     );
 }
@@ -136,9 +136,9 @@ $ad_show_left = isset($conf['ad_show_left']) ? $conf['ad_show_left'] : '0';
 $ad_new_window = isset($conf['ad_new_window']) ? $conf['ad_new_window'] : '1';
 $ad_target = $ad_new_window == '1' ? ' target="_blank" rel="noopener"' : '';
 $ad_groups = qifu_ad_front_groups();
-$ad_below_mode = isset($conf['ad_mode_below_search']) ? $conf['ad_mode_below_search'] : 'fixed';
-$ad_right_mode = isset($conf['ad_mode_pc_right']) ? $conf['ad_mode_pc_right'] : 'fixed';
-$ad_left_mode = isset($conf['ad_mode_pc_left']) ? $conf['ad_mode_pc_left'] : 'fixed';
+$ad_below_mode = 'fixed';
+$ad_right_mode = 'fixed';
+$ad_left_mode = 'fixed';
 $ad_below_items = array();
 $ad_below_has_items = false;
 for($i=1; $i<=4; $i++){
@@ -330,18 +330,18 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
 .site-search-state.show{display:block}
 .site-search-state.empty{color:rgba(255,210,120,.82)}
 .ad-link{display:block;text-decoration:none;color:inherit}
-.ad-img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center}
+.ad-img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;object-position:center}
 .ad-grid{max-width:900px;margin:16px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.ad-cell{height:92px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,rgba(7,18,46,.34),rgba(31,54,92,.24));border:1px solid rgba(255,255,255,.24);border-radius:18px;box-shadow:0 14px 42px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12)}
+.ad-cell{min-height:0;aspect-ratio:7/2;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,rgba(7,18,46,.34),rgba(31,54,92,.24));border:1px solid rgba(255,255,255,.24);border-radius:18px;box-shadow:0 14px 42px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12)}
 .ad-cell-empty{display:block;pointer-events:none}
-.ad-banner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:4px;transition:.25s;border-radius:18px;background:rgba(5,14,38,.2)}
+.ad-banner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;transition:.25s;border-radius:18px;background:rgba(5,14,38,.2)}
 .ad-banner:hover{transform:scale(1.015);filter:brightness(1.08)}
 .ad-banner .ad-img{height:100%}
-.ad-side{position:fixed;top:50%;z-index:120;width:168px;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;padding:4px;border-radius:18px;overflow:hidden;background:linear-gradient(145deg,rgba(5,14,38,.56),rgba(38,61,98,.42));border:1px solid rgba(255,255,255,.18);box-shadow:0 16px 48px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.12);transition:.25s;transform:translateY(-50%)}
+.ad-side{position:fixed;top:50%;z-index:120;width:168px;aspect-ratio:14/31;display:flex;align-items:center;justify-content:center;padding:0;border-radius:18px;overflow:hidden;background:linear-gradient(145deg,rgba(5,14,38,.56),rgba(38,61,98,.42));border:1px solid rgba(255,255,255,.18);box-shadow:0 16px 48px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.12);transition:.25s;transform:translateY(-50%)}
 .ad-side-right{right:28px}
 .ad-side-left{left:28px}
 .ad-side:hover{transform:translateY(calc(-50% - 3px));border-color:rgba(255,255,255,.32);box-shadow:0 22px 58px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18)}
-.ad-side .ad-img{max-height:100%;object-fit:contain}
+.ad-side .ad-img{max-height:100%}
 .sec{margin-top:26px}
 .sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .dot{width:9px;height:9px;border-radius:50%;background:rgba(140,190,255,.9);box-shadow:0 0 16px rgba(100,160,255,.5),0 0 32px rgba(100,160,255,.2);flex-shrink:0;animation:pulse 3s ease-in-out infinite}
@@ -422,7 +422,7 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
   .tags{justify-content:flex-start;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch}
   .tag{flex:0 0 auto;padding:7px 12px;white-space:nowrap}
   .ad-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
-  .ad-cell{height:72px;border-radius:13px}
+  .ad-cell{aspect-ratio:7/2;border-radius:13px}
   .ad-banner{border-radius:13px}
   .sec{margin-top:20px}
   .sec-hd{gap:8px;margin-bottom:10px}
@@ -467,14 +467,14 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
   .card{padding:10px 8px;gap:8px}
   .ico{width:32px;height:32px}
   .ad-grid{grid-template-columns:1fr}
-  .ad-cell{height:78px}
+  .ad-cell{aspect-ratio:7/2}
   .online-stats-row{grid-template-columns:1fr;gap:7px;padding:0 8px}
   .online-stats-item{grid-template-columns:auto auto auto;justify-content:center}
   .online-stats-item-ip{grid-column:auto;grid-template-columns:auto auto}
 }
 @media(max-width:1500px){.ad-side{width:136px}.ad-side-right{right:16px}.ad-side-left{left:16px}}
-@media(max-width:1280px){.ad-side{width:92px;border-radius:14px}.ad-side-right{right:10px}.ad-side-left{left:10px}.ad-side .ad-img{max-height:220px}}
-@media(max-width:980px){.ad-side{display:none}}
+@media(max-width:1440px){.ad-side{display:none}}
+@media(max-height:520px){.ad-side{display:none}}
 
 /* 友链申请：网址优先，自动获取公开站点信息。 */
 #lkm-wrap{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(2,7,12,.76);backdrop-filter:blur(8px)}
@@ -489,7 +489,6 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
 .lkm-close:hover,.lkm-close:focus-visible{outline:0;background:rgba(255,255,255,.07);color:#fff}
 .lkm-bd{padding:0}
 .lkm-url-priority{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.12);background:#111d2a}
-.lkm-auto-badge{display:inline-flex;align-items:center;margin-left:7px;padding:2px 6px;border-radius:4px;background:rgba(66,201,138,.12);color:#65dba2;font-size:9px;font-weight:650;vertical-align:1px}
 .lkm-url-line{display:grid;grid-template-columns:minmax(0,1fr) 98px;gap:8px}
 .lkm-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:17px 20px}
 .lkm-row{min-width:0}.lkm-row-wide{grid-column:1/-1}.lkm-row label{display:block;margin-bottom:6px;color:#d9e0e9;font-size:12px;font-weight:650;line-height:1.4}
@@ -640,7 +639,7 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
       ?>
       <div class="ad-cell" data-ad-slot="<?php echo $ad_slot; ?>" data-ad-slot-label="<?php echo htmlspecialchars($ad_slot_label); ?>">
         <?php if(!empty($ad_item) && $ad_item['image'] !== ''): ?>
-        <a class="ad-link ad-banner" data-ad-id="<?php echo intval($ad_item['id']); ?>" data-ad-slot="<?php echo $ad_slot; ?>" href="<?php echo htmlspecialchars($ad_item['link'] ?: 'javascript:void(0)'); ?>"<?php echo $ad_item['link'] ? $ad_target : ''; ?> title="<?php echo htmlspecialchars($ad_item['title'] ?: $ad_slot_label); ?>" aria-label="<?php echo htmlspecialchars('搜索栏下方广告'.$ad_slot_label); ?>">
+        <a class="ad-link ad-banner" data-ad-id="<?php echo intval($ad_item['id']); ?>" data-ad-slot="<?php echo $ad_slot; ?>" href="<?php echo htmlspecialchars($ad_item['link'] ?: '#', ENT_QUOTES, 'UTF-8'); ?>"<?php echo $ad_item['link'] ? $ad_target : ' aria-disabled="true"'; ?> title="<?php echo htmlspecialchars($ad_item['title'] ?: $ad_slot_label); ?>" aria-label="<?php echo htmlspecialchars('搜索栏下方广告'.$ad_slot_label); ?>">
           <img class="ad-img" src="<?php echo htmlspecialchars($ad_item['image']); ?>" alt="<?php echo htmlspecialchars($ad_item['alt'] ?: $ad_item['title'] ?: 'ad'); ?>">
         </a>
         <?php else: ?>
@@ -760,12 +759,12 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
 </div>
 
 <?php if($ad_right_show): ?>
-<a class="ad-link ad-side ad-side-right" data-ad-id="<?php echo intval($ad_right['id']); ?>" href="<?php echo htmlspecialchars($ad_right['link'] ?: 'javascript:void(0)'); ?>"<?php echo $ad_right['link'] ? $ad_target : ''; ?> title="<?php echo htmlspecialchars($ad_right['title']); ?>">
+<a class="ad-link ad-side ad-side-right" data-ad-id="<?php echo intval($ad_right['id']); ?>" href="<?php echo htmlspecialchars($ad_right['link'] ?: '#', ENT_QUOTES, 'UTF-8'); ?>"<?php echo $ad_right['link'] ? $ad_target : ' aria-disabled="true"'; ?> title="<?php echo htmlspecialchars($ad_right['title']); ?>">
   <img class="ad-img" src="<?php echo htmlspecialchars($ad_right['image']); ?>" alt="<?php echo htmlspecialchars($ad_right['alt'] ?: $ad_right['title'] ?: 'ad'); ?>">
 </a>
 <?php endif; ?>
 <?php if($ad_left_show): ?>
-<a class="ad-link ad-side ad-side-left" data-ad-id="<?php echo intval($ad_left['id']); ?>" href="<?php echo htmlspecialchars($ad_left['link'] ?: 'javascript:void(0)'); ?>"<?php echo $ad_left['link'] ? $ad_target : ''; ?> title="<?php echo htmlspecialchars($ad_left['title']); ?>">
+<a class="ad-link ad-side ad-side-left" data-ad-id="<?php echo intval($ad_left['id']); ?>" href="<?php echo htmlspecialchars($ad_left['link'] ?: '#', ENT_QUOTES, 'UTF-8'); ?>"<?php echo $ad_left['link'] ? $ad_target : ' aria-disabled="true"'; ?> title="<?php echo htmlspecialchars($ad_left['title']); ?>">
   <img class="ad-img" src="<?php echo htmlspecialchars($ad_left['image']); ?>" alt="<?php echo htmlspecialchars($ad_left['alt'] ?: $ad_left['title'] ?: 'ad'); ?>">
 </a>
 <?php endif; ?>
@@ -791,14 +790,14 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
       <span class="lkm-head-icon" aria-hidden="true"><img src="install/default-logo.webp" alt=""></span>
       <div class="lkm-title">
         <h3 id="lkmTitle">提交友链申请</h3>
-        <p>先填写网址，系统会自动补全站点资料</p>
+        <p>先填写网址，点击“获取信息”自动读取站点资料</p>
       </div>
       <button class="lkm-close" id="lkmCloseBtn" type="button" aria-label="关闭友链申请弹窗">&times;</button>
     </div>
     <div class="lkm-bd" id="lkmFormBd">
       <div class="lkm-fields">
         <div class="lkm-row lkm-row-wide">
-          <label>网站地址 <span class="lkm-auto-badge">自动识别</span></label>
+          <label>网站地址</label>
           <div class="lkm-url-line">
             <input type="url" id="lkmUrl" placeholder="输入域名或完整 URL" autocomplete="off" inputmode="url">
             <button class="lkm-fetch" id="lkmFetchMeta" type="button">获取信息</button>
@@ -865,16 +864,15 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
   var descInput = document.getElementById('lkmDesc');
   var emailInput = document.getElementById('lkmEmail');
   var metaStatus = document.getElementById('lkmMetaStatus');
-  var metaTimer = null;
   var metaRequest = null;
   var metaRequestUrl = '';
   var metaCallbacks = [];
 
   function cancelMetaRequest(){
-    clearTimeout(metaTimer);
     metaCallbacks = [];
     var pending = metaRequest;
     metaRequest = null;
+    metaRequestUrl = '';
     if(pending) pending.abort();
   }
 
@@ -907,7 +905,7 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
     cancelMetaRequest();
     wrap.classList.add('open');
     titleEl.textContent = '提交友链申请';
-    titleNote.textContent = '输入网址后，系统会自动补全公开站点资料';
+    titleNote.textContent = '填写网址后，点击“获取信息”自动读取公开站点资料';
     formBd.style.display = 'block';
     doneBd.style.display = 'none';
     tip.style.display = 'none';
@@ -933,11 +931,14 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
   function normalizeSiteUrl(value){
     value = String(value || '').trim();
     if(!value) return '';
-    if(!/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) value = 'https://' + value;
+    var hasExplicitScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(value);
+    var authority = value.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').split(/[\/?#]/, 1)[0];
+    if(/^\d+(?::\d+)?$/.test(authority)) return '';
+    if(!hasExplicitScheme) value = 'https://' + value;
     try{
       var parsed = new URL(value);
       if(parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
-      return parsed.href;
+      return hasExplicitScheme ? value : parsed.href;
     }catch(e){ return ''; }
   }
 
@@ -1010,7 +1011,6 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
       if(response.code == 1 && response.data){
         applyAutoValue(nameInput, response.data.name);
         applyAutoValue(descInput, response.data.description);
-        if(response.data.url) urlInput.value = response.data.url;
         setMetaStatus('已自动获取网站信息', 'success');
         finishMetaRequest(request, true);
       }else{
@@ -1027,16 +1027,10 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
   }
 
   urlInput.addEventListener('input', function(){
-    clearTimeout(metaTimer);
+    cancelMetaRequest();
     setMetaStatus('', '');
-    metaTimer = setTimeout(function(){ requestSiteMeta(); }, 900);
-  });
-  urlInput.addEventListener('blur', function(){
-    clearTimeout(metaTimer);
-    requestSiteMeta();
   });
   fetchButton.addEventListener('click', function(){
-    clearTimeout(metaTimer);
     requestSiteMeta();
   });
 
@@ -1048,6 +1042,10 @@ body{font-family:'Noto Sans SC',sans-serif;min-height:100vh;min-height:100dvh;ov
     var email = emailInput.value.trim();
     if(!name || !url){
       tip.style.display='block'; tip.className='lkm-tip err'; tip.innerHTML='请填写网站名称和URL'; return;
+    }
+    url = normalizeSiteUrl(url);
+    if(!url){
+      tip.style.display='block'; tip.className='lkm-tip err'; tip.innerHTML='请输入正确的网站域名或URL'; return;
     }
     setSubmitState('loading', '正在提交...');
     tip.style.display='none';
