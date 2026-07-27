@@ -82,6 +82,14 @@ function qifu_update_history_cleanup_retired_official(){
 
 function qifu_update_history_seed(){
     $entries = array(
+        array('V1.8','2026-07-27','祈福导航 V1.8 正式版',array(
+            '修复后台登录跳转循环、错误提示异常及安装后后台空白问题。',
+            '后台会话有效期统一为 12 小时，并增加页面可见时的安全会话保活。',
+            '修复站点筛选误改状态，新增批量修改站点归属分类功能。',
+            '修复分类状态显示不一致，并让分类改名实时同步到所属站点与前台。',
+            '完善广告管理交互反馈、分区视觉和保存流程，提升操作辨识度。',
+            '统一产品、安装器、后台前端与更新协议版本为 V1.8。'
+        )),
         array('V1.7','2026-07-23','祈福导航 V1.7 正式版',array(
             '全面重构后台管理界面与登录页，统一导航、表格、表单、操作按钮及移动端布局。',
             '重构广告系统，支持全局开关、三个广告区域独立控制和板块内素材管理。',
@@ -199,7 +207,13 @@ function qifu_update_status($remote){
     if(is_array($remote) && isset($remote['update']) && is_array($remote['update'])){
         $remote_version = qifu_update_display_version(isset($remote['update']['version']) ? $remote['update']['version'] : '');
     }
-    $latest = $remote_version !== '' ? $remote_version : (isset($history[0]['version']) ? $history[0]['version'] : $current);
+    $latest = $current;
+    foreach(array(isset($history[0]['version']) ? $history[0]['version'] : '', $remote_version) as $candidate){
+        $candidate_key = qifu_update_version_key($candidate);
+        if($candidate_key !== '' && version_compare($candidate_key, qifu_update_version_key($latest), '>')){
+            $latest = qifu_update_display_version($candidate_key);
+        }
+    }
     return array(
         'currentVersion'=>$current,
         'latestVersion'=>$latest,

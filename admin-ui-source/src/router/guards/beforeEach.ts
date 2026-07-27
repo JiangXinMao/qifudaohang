@@ -235,10 +235,10 @@ function handleLoginStatus(
   }
 
   // 未登录且访问需要权限的页面，跳转到登录页并携带 redirect 参数
-  userStore.logOut()
   next({
     name: 'Login',
-    query: { redirect: to.fullPath }
+    query: { redirect: to.fullPath },
+    replace: true
   })
   return false
 }

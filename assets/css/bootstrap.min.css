@@ -1,4 +1,4 @@
-/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.8 官方开源：https://github.com/JiangXinMao/qifudaohang */
 /*!
  * Bootstrap v3.3.7 (http://getbootstrap.com)
  * Copyright 2011-2016 Twitter, Inc.

@@ -89,7 +89,11 @@ axiosInstance.interceptors.response.use(
     throw createHttpError(msg || $t('httpMsg.requestFailed'), code)
   },
   (error) => {
-    if (error.response?.status === ApiStatus.unauthorized) handleUnauthorizedError()
+    const requestUrl = typeof error.config?.url === 'string' ? error.config.url : ''
+    const isLoginRequest = requestUrl.includes('action=login')
+    if (error.response?.status === ApiStatus.unauthorized && !isLoginRequest) {
+      handleUnauthorizedError()
+    }
     return Promise.reject(handleError(error))
   }
 )

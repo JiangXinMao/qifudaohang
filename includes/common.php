@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.8 官方开源：https://github.com/JiangXinMao/qifudaohang */
  
 error_reporting(0);
 define('CACHE_FILE', 0);
@@ -8,6 +8,7 @@ define('SYSTEM_ROOT', dirname(__FILE__).'/');
 define('ROOT', dirname(SYSTEM_ROOT).'/');
 define('SYS_KEY', 'daishua_key');
 define('CC_Defender', 1); //防CC攻击开关(1为session模式)
+if(!defined('QIFU_ADMIN_SESSION_IDLE_TIMEOUT')) define('QIFU_ADMIN_SESSION_IDLE_TIMEOUT', 43200);
 include_once(SYSTEM_ROOT.'admin_path.php');
 include_once(SYSTEM_ROOT.'media_path.php');
 
@@ -15,6 +16,13 @@ date_default_timezone_set("PRC");
 $date = date("Y-m-d H:i:s");
 $https_request = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off') || (isset($_SERVER['SERVER_PORT']) && intval($_SERVER['SERVER_PORT']) === 443);
 if(session_status() === PHP_SESSION_NONE){
+    $session_root = rtrim(sys_get_temp_dir(), '/\\').DIRECTORY_SEPARATOR.'qifu-sessions-'.substr(hash('sha256', (string)(realpath(ROOT) ?: ROOT)), 0, 16);
+    if((is_dir($session_root) || @mkdir($session_root, 0700, true)) && is_writable($session_root)){
+        ini_set('session.save_path', $session_root);
+    }
+    ini_set('session.gc_maxlifetime', (string)QIFU_ADMIN_SESSION_IDLE_TIMEOUT);
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
     ini_set('session.use_only_cookies', '1');
     ini_set('session.use_strict_mode', '1');
     ini_set('session.cookie_httponly', '1');

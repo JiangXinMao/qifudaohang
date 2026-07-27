@@ -1,1 +1,0 @@
-import{bK as a,bL as r,a3 as e,a8 as o,u as s}from"./index-hl7koTLS.js";const t={prefix:Math.floor(1e4*Math.random()),current:0},n=Symbol("elIdInjection"),i=()=>o()?e(n,t):t,u=e=>{const o=i(),t=a();return r(()=>s(e)||`${t.value}-id-${o.prefix}-${o.current++}`)};export{i as a,u};

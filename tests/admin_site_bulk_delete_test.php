@@ -21,7 +21,7 @@ check_admin_site_bulk_delete(strpos($view, '批量删除') !== false, 'batch del
 check_admin_site_bulk_delete(strpos($view, 'selectedSiteCount === 0 || siteBatchDeleting') !== false, 'batch delete action is not disabled when no site is selected');
 check_admin_site_bulk_delete(strpos($view, "qifuActionOptimized<{ deleted?: number }>('site_delete', { ids })") !== false, 'batch delete does not send all selected IDs in one request');
 check_admin_site_bulk_delete(strpos($view, '确定永久删除已选的 ${count} 个站点吗？此操作无法恢复。') !== false, 'batch deletion lacks a clear destructive-operation confirmation');
-check_admin_site_bulk_delete(strpos($view, 'watch([siteKeyword, siteCategory], () => clearSiteSelection())') !== false, 'site selection is not cleared after filtering');
+check_admin_site_bulk_delete(strpos($view, 'function applySiteFilters()') !== false && strpos($view, 'appliedSiteCategory.value = siteCategory.value') !== false && strpos($view, 'clearSiteSelection()') !== false, 'site selection is not cleared when filters are applied');
 check_admin_site_bulk_delete(strpos($api, "if(\$action === 'site_delete')") !== false, 'site deletion API action is missing');
 check_admin_site_bulk_delete(strpos($api, "isset(\$_POST['ids']) && is_array(\$_POST['ids'])") !== false, 'site deletion API does not accept a selected-ID array');
 check_admin_site_bulk_delete(strpos($api, "if(!\$ids) qifu_api_exit(array(), '请选择至少一个有效站点', 400);") !== false, 'site deletion API accepts an empty batch');

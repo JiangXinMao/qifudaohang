@@ -62,6 +62,16 @@ function qifu_admin_password_verify($password){
     return $legacy !== '' && hash_equals($legacy, (string)$password);
 }
 
+function qifu_admin_credentials_verify($username, $password){
+    global $conf;
+    if(!is_string($username) || !is_string($password)) return false;
+    if($username === '' || $password === '' || strlen($username) > 128 || strlen($password) > 4096) return false;
+    $stored_username = isset($conf['admin_user']) ? (string)$conf['admin_user'] : '';
+    return $stored_username !== ''
+        && hash_equals($stored_username, $username)
+        && qifu_admin_password_verify($password);
+}
+
 function qifu_admin_password_migrate($password){
     global $conf, $CACHE;
     if(!empty($conf['admin_pwd_hash'])) return;

@@ -85,12 +85,23 @@ $hash = password_hash('abc123', PASSWORD_DEFAULT);
 check_security(password_verify('abc123', $hash), 'password hash verification failed');
 check_security(!password_verify('wrong123', $hash), 'wrong password unexpectedly verified');
 
+$original_conf_exists = isset($conf);
+$original_conf = $original_conf_exists ? $conf : null;
+$conf['admin_user'] = 'admin';
+$conf['admin_pwd'] = '';
+$conf['admin_pwd_hash'] = $hash;
+check_security(qifu_admin_credentials_verify('admin', 'abc123'), 'stored legacy administrator name cannot authenticate');
+check_security(!qifu_admin_credentials_verify('admin', 'wrong123'), 'legacy administrator compatibility accepted a wrong password');
+if($original_conf_exists) $conf = $original_conf;
+else unset($conf);
+
 $stored_user = (string)$DB->prepared_value('SELECT v FROM web_config WHERE k=?', array('admin_user'));
 $stored_plain = (string)$DB->prepared_value('SELECT v FROM web_config WHERE k=?', array('admin_pwd'));
 $stored_hash = (string)$DB->prepared_value('SELECT v FROM web_config WHERE k=?', array('admin_pwd_hash'));
-check_security(qifu_username_valid($stored_user), 'stored administrator username violates policy');
+check_security($stored_user !== '' && strlen($stored_user) <= 128, 'stored administrator username is unusable');
 check_security($stored_plain === '', 'legacy plaintext administrator password is still stored');
-check_security(password_verify('123456', $stored_hash), 'stored administrator password hash is invalid');
+$stored_hash_info = password_get_info($stored_hash);
+check_security($stored_hash !== '' && isset($stored_hash_info['algoName']) && $stored_hash_info['algoName'] !== 'unknown', 'stored administrator password hash is invalid');
 
 $token = qifu_csrf_token();
 check_security(strlen($token) === 64 && qifu_csrf_valid($token), 'CSRF token generation or verification failed');

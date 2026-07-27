@@ -115,7 +115,7 @@
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
   import { fetchLogin } from '@/api/auth'
-  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
+  import { ElMessage, ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useSettingStore } from '@/store/modules/setting'
   import loginArtwork from '@imgs/login/lf_icon2.webp'
 
@@ -161,12 +161,13 @@
 
     try {
       // 表单验证
-      const valid = await formRef.value.validate()
+      const valid = await formRef.value.validate().catch(() => false)
       if (!valid) return
 
       // 拖拽验证
       if (!isPassing.value) {
         isClickPass.value = true
+        ElMessage.warning(t('login.placeholder.slider'))
         return
       }
 
@@ -193,15 +194,14 @@
       showLoginSuccessNotice()
 
       // 获取 redirect 参数，如果存在则跳转到指定页面，否则跳转到首页
-      const redirect = route.query.redirect as string
-      router.push(redirect || user?.homePath || '/')
+      const redirect = resolveLoginRedirect(route.query.redirect)
+      await router.replace(redirect || user?.homePath || '/')
     } catch (error) {
       // 处理 HttpError
       if (error instanceof HttpError) {
-        // console.log(error.code)
+        ElMessage.error(error.message || '登录失败，请检查账号和密码')
       } else {
-        // 处理非 HttpError
-        // ElMessage.error('登录失败，请稍后重试')
+        ElMessage.error('登录失败，请稍后重试')
         console.error('[Login] Unexpected error:', error)
       }
     } finally {
@@ -210,9 +210,18 @@
     }
   }
 
+  const resolveLoginRedirect = (value: unknown) => {
+    const redirect = Array.isArray(value) ? value[0] : value
+    if (typeof redirect !== 'string' || !redirect.startsWith('/') || redirect.startsWith('//')) {
+      return ''
+    }
+    if (redirect.startsWith('/auth/')) return ''
+    return redirect
+  }
+
   // 重置拖拽验证
   const resetDragVerify = () => {
-    dragVerify.value.reset()
+    dragVerify.value?.reset?.()
   }
 
   // 登录成功提示

@@ -3,7 +3,7 @@ if(isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) =
   http_response_code(404);
   exit;
 }
-/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.8 官方开源：https://github.com/JiangXinMao/qifudaohang */
 
 webscan_error();
 //引用配置文件

@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.8 官方开源：https://github.com/JiangXinMao/qifudaohang */
 error_reporting(0);
 @header('Content-Type: text/html; charset=UTF-8');
 define('QIFU_INSTALL_CONTEXT', true);
@@ -11,7 +11,7 @@ if(session_status() === PHP_SESSION_NONE){
 	session_start();
 }
 $do=isset($_GET['do'])?$_GET['do']:'0';
-$qifu_version = 'V1.7';
+$qifu_version = 'V1.8';
 $lock_file = __DIR__.'/install.lock';
 $installed=false;
 
@@ -973,7 +973,7 @@ body.qifu-install-top {
 			<aside class="qifu-screen-column qifu-side-column">
 				<section class="qifu-card qifu-card-dark qifu-version-tile">
 					<span class="qifu-version-label">版本信息</span>
-					<strong class="qifu-version-number">1.7</strong>
+					<strong class="qifu-version-number">1.8</strong>
 					<span class="qifu-version-note">安全加固正式版</span>
 				</section>
 				<section class="qifu-card">

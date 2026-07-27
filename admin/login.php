@@ -20,10 +20,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['a
     $user = trim((string)$_POST['user']);
     $pass = (string)$_POST['pass'];
     $wait = qifu_login_rate_wait($user);
-    $format_ok = qifu_username_valid($user) && qifu_password_valid($pass);
-    $user_ok = $format_ok && isset($conf['admin_user']) && hash_equals((string)$conf['admin_user'], $user);
-    $pass_ok = $user_ok && qifu_admin_password_verify($pass);
-    if($wait <= 0 && $user_ok && $pass_ok) {
+    if($wait <= 0 && qifu_admin_credentials_verify($user, $pass)) {
         qifu_login_rate_clear($user);
         qifu_admin_password_migrate($pass);
         qifu_admin_login_session($user);

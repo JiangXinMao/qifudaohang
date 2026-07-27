@@ -333,13 +333,14 @@
             clearable
             placeholder="搜索名称、URL或描述"
             style="max-width: 320px"
+            @keyup.enter="applySiteFilters"
           /><ElSelect v-model="siteCategory" clearable placeholder="全部分类" style="width: 160px"
             ><ElOption
               v-for="cat in data.categories"
               :key="cat.id"
               :label="cat.name"
               :value="cat.name" /></ElSelect
-          ><ElButton type="primary" @click="refresh()">筛选</ElButton
+          ><ElButton type="primary" @click="applySiteFilters">筛选</ElButton
           ><ElButton
             type="danger"
             plain
@@ -347,6 +348,11 @@
             :loading="siteBatchDeleting"
             @click="removeSelectedSites"
             ><ElIcon><Delete /></ElIcon>批量删除</ElButton
+          ><ElButton
+            plain
+            :disabled="selectedSiteCount === 0 || siteBatchCategorySaving"
+            @click="openSiteBatchCategory"
+            ><ElIcon><Folder /></ElIcon>批量修改分类</ElButton
           ><ElButton type="primary" @click="openSite()"
             ><ElIcon><Plus /></ElIcon>新增站点</ElButton
           ></div
@@ -518,6 +524,25 @@
         ><template #footer
           ><ElButton @click="siteDialog = false">取消</ElButton
           ><ElButton type="primary" :loading="siteSaving" @click="saveSite(siteForm)">保存</ElButton></template
+        ></ElDialog
+      ><ElDialog v-model="siteBatchCategoryDialog" title="批量修改归属分类" width="460px"
+        ><ElForm label-position="top"
+          ><ElFormItem label="目标分类"
+            ><ElSelect v-model="siteBatchCategory" placeholder="请选择分类" style="width: 100%"
+              ><ElOption
+                v-for="cat in data.categories"
+                :key="cat.id"
+                :label="cat.name"
+                :value="cat.name" /></ElSelect></ElFormItem
+          ><div class="setting-hint">将修改已选 {{ selectedSiteCount }} 个站点的归属分类。</div></ElForm
+        ><template #footer
+          ><ElButton @click="siteBatchCategoryDialog = false">取消</ElButton
+          ><ElButton
+            type="primary"
+            :disabled="!siteBatchCategory"
+            :loading="siteBatchCategorySaving"
+            @click="saveSiteBatchCategory"
+            >确认修改</ElButton></template
         ></ElDialog
       ></template
     >
@@ -1291,7 +1316,10 @@
               ></span>
               <span class="system-project-link-copy"
                 ><b>匠心猫AI <ElTag size="small" type="info" effect="plain">20xpro</ElTag></b
-                ><small>api.jiangxinmao.com</small></span
+                ><small>api.jiangxinmao.com · 低至 0.1 Pro</small>
+                <span class="system-project-link-features" aria-label="支持接入">
+                  <i>Codex</i><i>GPT</i><i>Claude</i>
+                </span></span
               >
               <ElIcon class="system-project-link-arrow" aria-hidden="true"><Link /></ElIcon>
             </a>
@@ -1632,11 +1660,16 @@
   const categoryIconKeyword = ref('')
   const siteKeyword = ref('')
   const siteCategory = ref('')
+  const appliedSiteKeyword = ref('')
+  const appliedSiteCategory = ref('')
   const siteTableRef = ref<any>()
   const categoryTableRef = ref<any>()
   const selectedSiteIds = ref<number[]>([])
   const selectedCategoryIds = ref<number[]>([])
   const siteBatchDeleting = ref(false)
+  const siteBatchCategoryDialog = ref(false)
+  const siteBatchCategory = ref('')
+  const siteBatchCategorySaving = ref(false)
   const categoryBatchDeleting = ref(false)
   const logAction = ref('')
   const logTarget = ref('')
@@ -1802,8 +1835,8 @@
     { key: 'complete', label: '更新完成', note: '切换最新版本', threshold: 100 }
   ] as const
   const updateState = reactive<QifuUpdateStatus>({
-    currentVersion: 'V1.7',
-    latestVersion: qifuChangeLog[0]?.version || 'V1.7',
+    currentVersion: 'V1.8',
+    latestVersion: qifuChangeLog[0]?.version || 'V1.8',
     remoteVersion: '',
     updateAvailable: false,
     serviceAvailable: true,
@@ -1814,7 +1847,7 @@
       recordedAt: 0
     }))
   })
-  const currentVersion = computed(() => updateState.currentVersion || 'V1.7')
+  const currentVersion = computed(() => updateState.currentVersion || 'V1.8')
   const updateHistory = computed(() => updateState.history)
   const latestTimelineVersion = computed(
     () => updateHistory.value[0]?.version || currentVersion.value
@@ -1953,11 +1986,11 @@
   const filteredSites = computed(() =>
     data.sites.filter(
       (item: any) =>
-        (!siteCategory.value || item.category === siteCategory.value) &&
-        (!siteKeyword.value ||
+        (!appliedSiteCategory.value || item.category === appliedSiteCategory.value) &&
+        (!appliedSiteKeyword.value ||
           `${item.name} ${item.url} ${item.description}`
             .toLowerCase()
-            .includes(siteKeyword.value.toLowerCase()))
+            .includes(appliedSiteKeyword.value.toLowerCase()))
     )
   )
   const selectedSiteCount = computed(() => selectedSiteIds.value.length)
@@ -2010,6 +2043,32 @@
     newpwd2: [{ required: true, message: '请确认新密码', trigger: 'blur' }]
   }
 
+  function normalizeActive(value: unknown, fallback = 1) {
+    if (value === undefined || value === null || value === '') return fallback
+    return Number(value) === 0 ? 0 : 1
+  }
+
+  function applyBootstrapResult(result: QifuBootstrap) {
+    const normalized = {
+      ...result,
+      categories: result.categories.map((category: any) => ({
+        ...category,
+        active: normalizeActive(category.active)
+      })),
+      sites: result.sites.map((site: any) => ({
+        ...site,
+        active: normalizeActive(site.active)
+      }))
+    }
+    Object.assign(data, normalized)
+  }
+
+  function applySiteFilters() {
+    appliedSiteKeyword.value = siteKeyword.value.trim()
+    appliedSiteCategory.value = siteCategory.value
+    clearSiteSelection()
+  }
+
   function refresh(force = false) {
     if (refreshRequest) return refreshRequest
     // After initial load, refresh silently without skeleton
@@ -2017,7 +2076,7 @@
       refreshRequest = (async () => {
         try {
           const result = await qifuBootstrap()
-          Object.assign(data, result)
+          applyBootstrapResult(result)
           Object.assign(settingsDraft, result.settings)
           Object.assign(adsDraft, result.ads)
           setCsrfToken(result.csrf)
@@ -2035,7 +2094,7 @@
     refreshRequest = (async () => {
       try {
         const result = await qifuBootstrap()
-        Object.assign(data, result)
+        applyBootstrapResult(result)
         Object.assign(settingsDraft, result.settings)
         Object.assign(adsDraft, result.ads)
         setCsrfToken(result.csrf)
@@ -2444,7 +2503,13 @@
     Object.assign(
       siteForm,
       row
-        ? { desc_marquee: 0, desc_speed: 'normal', desc_color: 'default', ...row }
+        ? {
+            desc_marquee: 0,
+            desc_speed: 'normal',
+            desc_color: 'default',
+            ...row,
+            active: normalizeActive(row.active)
+          }
         : {
             id: 0,
             name: '',
@@ -2479,7 +2544,9 @@
   function resetCategory(row?: any) {
     Object.assign(
       categoryForm,
-      row ? { ...row } : { id: 0, name: '', icon: '⭐', sort: 10, active: 1 }
+      row
+        ? { ...row, active: normalizeActive(row.active) }
+        : { id: 0, name: '', icon: '⭐', sort: 10, active: 1 }
     )
     closeCategoryIconPicker()
     categoryDialog.value = true
@@ -2583,11 +2650,39 @@
       siteBatchDeleting.value = false
     }
   }
+  function openSiteBatchCategory() {
+    if (selectedSiteCount.value === 0) return
+    siteBatchCategory.value = ''
+    siteBatchCategoryDialog.value = true
+  }
+  async function saveSiteBatchCategory() {
+    const ids = [...selectedSiteIds.value]
+    const category = siteBatchCategory.value.trim()
+    if (!ids.length || !category || siteBatchCategorySaving.value) return
+    siteBatchCategorySaving.value = true
+    try {
+      const result = await qifuActionOptimized<{ updated?: number }>('site_category_batch', {
+        ids,
+        category
+      })
+      siteBatchCategoryDialog.value = false
+      qifuSuccess('站点分类已批量修改', `已更新 ${Number(result?.updated || 0)} 个站点。`)
+      clearSiteSelection()
+      await refresh()
+    } catch (error: any) {
+      ElMessage.error(error?.message || '批量修改分类失败')
+    } finally {
+      siteBatchCategorySaving.value = false
+    }
+  }
   async function saveCategory() {
     if (categorySaving.value) return
     categorySaving.value = true
     try {
-      await qifuActionOptimized('category_save', { ...categoryForm })
+      await qifuActionOptimized('category_save', {
+        ...categoryForm,
+        active: normalizeActive(categoryForm.active)
+      })
       categoryDialog.value = false
       qifuSuccess('分类已保存', '前台分类结构已同步更新。')
       await refresh()
@@ -2793,7 +2888,6 @@
   }
 
   onMounted(refresh)
-  watch([siteKeyword, siteCategory], () => clearSiteSelection())
   watch(
     pageName,
     (name) => {
@@ -4004,7 +4098,7 @@
     gap: 10px;
     align-items: center;
     min-width: 0;
-    min-height: 58px;
+    min-height: 78px;
     padding: 10px 12px;
     color: inherit;
     text-decoration: none;
@@ -4076,6 +4170,29 @@
     margin-top: 4px;
     color: var(--art-gray-600);
     font-size: 11px;
+  }
+
+  .system-project-link-features {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .system-project-link-features i {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 6px;
+    color: var(--el-color-primary-dark-2);
+    font-size: 10px;
+    font-style: normal;
+    line-height: 18px;
+    white-space: nowrap;
+    background: var(--el-color-primary-light-9);
+    border: 1px solid var(--el-color-primary-light-7);
+    border-radius: 4px;
   }
 
   .system-project-link-arrow {

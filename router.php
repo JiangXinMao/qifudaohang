@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.7 本地演示路由 */
+/* 祈福导航系统 V1.8 本地演示路由 */
 
 $request_uri = isset($_SERVER['REQUEST_URI']) ? (string)$_SERVER['REQUEST_URI'] : '/';
 $raw_path = parse_url($request_uri, PHP_URL_PATH);

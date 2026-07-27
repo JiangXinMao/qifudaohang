@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/JiangXinMao/qifudaohang/actions/workflows/ci.yml/badge.svg)](https://github.com/JiangXinMao/qifudaohang/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-16803A?style=flat-square)](LICENSE)
-![Version](https://img.shields.io/badge/Version-1.7-2563EB?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.8-2563EB?style=flat-square)
 ![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL%20%2F%20MariaDB-Supported-4479A1?style=flat-square&logo=mysql&logoColor=white)
 ![Vue](https://img.shields.io/badge/Vue-3.5-42B883?style=flat-square&logo=vuedotjs&logoColor=white)
@@ -32,7 +32,7 @@
 >
 > **蓝奏云国内渠道：** [下载最新生产包](https://zyfxb521.lanzouq.com/ibUfF3yfptsf)
 >
-> **GitHub 发布包：** [祈福导航系统 V1.7 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/V1.7)
+> **GitHub 发布包：** [祈福导航系统 V1.8 正式版](https://github.com/JiangXinMao/qifudaohang/releases/tag/V1.8)
 
 ## 项目定位
 
@@ -40,7 +40,7 @@
 
 正式部署不依赖 Composer，也不要求服务器安装 Node.js。仓库已经包含编译后的后台静态资源，上传 PHP 程序并完成安装向导即可运行；只有二次开发后台界面时才需要 Node.js 与 pnpm。
 
-## V1.7 更新亮点
+## V1.8 更新亮点
 
 - **三端响应式体验**：前台与后台同时适配桌面、平板和手机，搜索、表格、表单和操作区会按屏幕宽度自动调整。
 - **全新现代化后台**：基于 Vue 3、Element Plus 与 Art Design Pro 深度定制，统一导航、表格、表单、通知和页面切换体验。
@@ -54,15 +54,18 @@
 - **安全在线更新**：更新清单与安装包执行 Ed25519 签名、SHA-256、文件大小和版本校验，并支持维护状态、备份和失败回滚。
 - **安装流程加固**：完善环境检测、数据库连接、配置生成、安装完成页和异常提示，降低宝塔环境中出现空白页的概率。
 - **安全能力升级**：包含参数化查询、CSRF、防登录爆破、安全 Cookie、上传校验、SSRF 防护和后台目录改名支持。
+- **登录与会话稳定性**：修复登录跳转循环、异常错误提示和安装后后台空白，后台空闲有效期统一为 12 小时并增加安全保活。
+- **站点批量运营**：修复筛选时误改站点状态，新增批量修改站点归属分类功能。
+- **分类数据一致性**：分类状态默认开启且显示与实际值一致，分类改名后所属站点和前台同步更新。
 
-### V1.7 版本标识
+### V1.8 版本标识
 
 | 项目 | 值 |
 | --- | --- |
-| 产品版本 | `V1.7` |
-| 内部版本 | `1700` |
-| 后台前端版本 | `1.7.0` |
-| 更新协议版本 | `1.7.0` |
+| 产品版本 | `V1.8` |
+| 内部版本 | `1800` |
+| 后台前端版本 | `1.8.0` |
+| 更新协议版本 | `1.8.0` |
 
 ## 核心能力
 

@@ -354,9 +354,7 @@ if($action === 'login'){
     $username = trim(isset($_POST['userName']) ? (string)$_POST['userName'] : (string)@$_POST['user']);
     $password = isset($_POST['password']) ? (string)$_POST['password'] : (string)@$_POST['pass'];
     $wait = qifu_login_rate_wait($username);
-    $format_ok = qifu_username_valid($username) && qifu_password_valid($password);
-    $user_ok = $format_ok && isset($conf['admin_user']) && hash_equals((string)$conf['admin_user'], $username);
-    if($wait > 0 || !$user_ok || !qifu_admin_password_verify($password)){
+    if($wait > 0 || !qifu_admin_credentials_verify($username, $password)){
         if($wait <= 0) qifu_login_rate_fail($username);
         qifu_api_exit(array(), $wait > 0 ? '尝试次数过多，请稍后再试' : '账号或密码错误', 401);
     }
@@ -562,7 +560,7 @@ if($action === 'site_save'){
     $icon = mb_substr(trim((string)@$_POST['icon']),0,255);
     $category = mb_substr(trim((string)@$_POST['category']),0,50);
     $sort = intval(@$_POST['sort']);
-    $active = intval(@$_POST['active']) === 1 ? 1 : 0;
+    $active = isset($_POST['active']) ? (intval($_POST['active']) === 1 ? 1 : 0) : 1;
     if($name === '' || !filter_var($url,FILTER_VALIDATE_URL) || !preg_match('#^https?://#i',$url)) qifu_api_exit(array(),'名称或 URL 格式不正确',400);
     if($id > 0) $DB->prepared_query('UPDATE web_dh SET name=?,url=?,description=?,desc_marquee=?,desc_speed=?,desc_color=?,icon=?,category=?,sort=?,active=? WHERE id=?',array($name,$url,$description,$desc_marquee,$desc_speed,$desc_color,$icon,$category,$sort,$active,$id));
     else { $DB->prepared_query('INSERT INTO web_dh (name,url,description,desc_marquee,desc_speed,desc_color,icon,category,sort,active) VALUES (?,?,?,?,?,?,?,?,?,?)',array($name,$url,$description,$desc_marquee,$desc_speed,$desc_color,$icon,$category,$sort,$active)); $id = qifu_api_last_id(); }
@@ -598,12 +596,49 @@ if($action === 'site_delete'){
     );
 }
 
+if($action === 'site_category_batch'){
+    qifu_api_require_write();
+    $raw_ids = isset($_POST['ids']) && is_array($_POST['ids']) ? $_POST['ids'] : array();
+    $ids = array();
+    foreach($raw_ids as $raw_id){
+        $id = intval($raw_id);
+        if($id > 0) $ids[$id] = $id;
+    }
+    $ids = array_values($ids);
+    $category = mb_substr(trim((string)@$_POST['category']), 0, 50);
+    if(!$ids) qifu_api_exit(array(), '请选择至少一个有效站点', 400);
+    if($category === '') qifu_api_exit(array(), '请选择目标分类', 400);
+    if(!$DB->prepared_row('SELECT id FROM web_category WHERE name=?', array($category))) qifu_api_exit(array(), '目标分类不存在，请刷新后重试', 404);
+
+    $updated = 0;
+    foreach($ids as $id){
+        if(!$DB->prepared_row('SELECT id FROM web_dh WHERE id=?', array($id))) continue;
+        if($DB->prepared_query('UPDATE web_dh SET category=? WHERE id=?', array($category, $id))) $updated++;
+    }
+    if($updated === 0) qifu_api_exit(array('requested'=>count($ids), 'updated'=>0), '所选站点不存在或已被删除', 404);
+
+    $CACHE->clear();
+    writeLog('修改', '站点', 0, 'Art Design Pro 后台批量修改站点分类为 '.$category.': '.$updated.' 个');
+    qifu_api_exit(array('requested'=>count($ids), 'updated'=>$updated, 'category'=>$category), '站点分类已批量修改');
+}
+
 if($action === 'category_save'){
     qifu_api_require_write();
-    $id=intval(@$_POST['id']); $name=mb_substr(trim((string)@$_POST['name']),0,50); $icon=mb_substr(trim((string)@$_POST['icon']),0,20); $sort=intval(@$_POST['sort']); $active=intval(@$_POST['active'])===1?1:0;
+    $id=intval(@$_POST['id']); $name=mb_substr(trim((string)@$_POST['name']),0,50); $icon=mb_substr(trim((string)@$_POST['icon']),0,20); $sort=intval(@$_POST['sort']); $active=isset($_POST['active'])?(intval($_POST['active'])===1?1:0):1;
     if($name==='') qifu_api_exit(array(),'分类名称不能为空',400);
     if($id>0) {
-        $DB->prepared_query('UPDATE web_category SET name=?,icon=?,sort=?,active=? WHERE id=?',array($name,$icon,$sort,$active,$id));
+        $existing = $DB->prepared_row('SELECT id,name,icon,sort,active FROM web_category WHERE id=?', array($id));
+        if(!$existing) qifu_api_exit(array(), '分类不存在或已被删除', 404);
+        if(!$DB->prepared_query('UPDATE web_category SET name=?,icon=?,sort=?,active=? WHERE id=?',array($name,$icon,$sort,$active,$id))) qifu_api_exit(array(), '分类保存失败，请稍后重试', 500);
+        if((string)$existing['name'] !== $name){
+            if(!$DB->prepared_query('UPDATE web_dh SET category=? WHERE category=?', array($name, (string)$existing['name']))){
+                $DB->prepared_query(
+                    'UPDATE web_category SET name=?,icon=?,sort=?,active=? WHERE id=?',
+                    array((string)$existing['name'], (string)$existing['icon'], intval($existing['sort']), intval($existing['active']), $id)
+                );
+                qifu_api_exit(array(), '分类名称已恢复，所属站点同步失败，请稍后重试', 500);
+            }
+        }
     } else {
         // SQLite requires the legacy addtime column even though MySQL installs may default it.
         $DB->prepared_query('INSERT INTO web_category (name,icon,sort,active,addtime) VALUES (?,?,?,?,?)',array($name,$icon,$sort,$active,time()));

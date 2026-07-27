@@ -1,5 +1,5 @@
 <?php
-/* 祈福导航系统 V1.7 官方开源：https://github.com/JiangXinMao/qifudaohang */
+/* 祈福导航系统 V1.8 官方开源：https://github.com/JiangXinMao/qifudaohang */
 
 include __DIR__ . "/../includes/common.php";
 $title='祈福导航系统 - 账号安全';
